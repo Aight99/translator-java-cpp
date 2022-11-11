@@ -5,7 +5,6 @@ WHITESPACE = re.compile('\S')
 LEXER_REGEX_FLAGS = re.IGNORECASE
 
 
-
 class Special(Symbol):
     LAMBDA = '__LAMBDA__'
     START = '__START__'
@@ -41,24 +40,25 @@ class Tag(Terminal):
     FOR = 'for'
     WHILE = 'while'
     DO = 'do'
-    VOID = 'void'
     MAX = 'max'
     MIN = 'min'
-    PROGRAM = 'program'
+    STATIC = 'static'
     CLASS = 'class'
     PUBLIC = 'public'
     PRINT = 'print'
     MAIN = 'main'
+    VOID = 'void'
 
 
 LEXER_RULES = [
-    LexerRule(Tag.TYPE_HINT, r'\bint|boolean|float|double|char|void\b'),
+    LexerRule(Tag.TYPE_HINT, r'\bint|boolean|float|double|char\b'),
+    LexerRule(Tag.MATH_OPERATOR, r'\+\+|\-\-|\*|/|\%|\+|\-'),
+    LexerRule(Tag.COMPARE, r'==\!=|\<=|\<|\>=|\>'),
     LexerRule(Tag.NUMBER_FLOAT, r'[\-\+]?\d+\.\d+'),
+    LexerRule(Tag.BOOLEAN_OPERATOR, r'\&\&|\|\|'),
     LexerRule(Tag.NUMBER_INT, r'[\-\+]?\d+'),
-    LexerRule(Tag.COMPARE, r'=|\!=|\<=|\<|\>=|\>'),
+
     LexerRule(Tag.OP_ASSIGN, r'\+=|\-=|\*=|/=|\%='),
-    LexerRule(Tag.MATH_OPERATOR, r'\+|\-|\*|/|\%|\+\+|\-\-'),
-    LexerRule(Tag.BOOLEAN_OPERATOR, r'\b&&|\|\|\b'),
     LexerRule(Tag.BOOLEAN_NOT, r'\!'),
     LexerRule(Tag.ASSIGN, r'='),
     LexerRule(Tag.BOOLEAN_VALUE, r'\btrue|false\b'),
@@ -70,7 +70,13 @@ LEXER_RULES = [
     LexerRule(Tag.MAX, r'\bMath\.max\b'),
     LexerRule(Tag.MIN, r'\bMath\.min\b'),
 
-    LexerRule(Tag.ID, r'\b[_a-zA-Z]\w*\b'),
+    LexerRule(Tag.STATIC, r'\bstatic\b'),
+    LexerRule(Tag.CLASS, r'\bclass\b'),
+    LexerRule(Tag.PUBLIC, r'\bpublic\b'),
+    LexerRule(Tag.PRINT, r'\bSystem\.out\.println\b'),
+    LexerRule(Tag.MAIN, r'\bMain|main\b'),
+    LexerRule(Tag.VOID, r'\bvoid\b'),
+
     LexerRule(Tag.LBRACKET, r'\('),
     LexerRule(Tag.RBRACKET, r'\)'),
     LexerRule(Tag.RBRACKET_CURLY, r'\}'),
@@ -83,9 +89,5 @@ LEXER_RULES = [
     LexerRule(Tag.QUOTE, r"\'"),
     LexerRule(Tag.DOUBLE_QUOTE, r'\"'),
 
-    LexerRule(Tag.PROGRAM, r'\bpublic\static\b'),
-    LexerRule(Tag.CLASS, r'\bclass\b'),
-    LexerRule(Tag.PUBLIC, r'\bpublic\b'),
-    LexerRule(Tag.PRINT, r'\bSystem\.out\.println\b'),
-    LexerRule(Tag.MAIN, r'\bMain|main\b'),
+    LexerRule(Tag.ID, r'\b[_a-zA-Z]\w*\b'),
 ]
