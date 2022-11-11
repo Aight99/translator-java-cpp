@@ -45,4 +45,4 @@ class Token:
         return str(self.value)
 
     def __repr__(self):
-        return str(self.value)
+        return str(self.value) + ' ' + str(self.tag)

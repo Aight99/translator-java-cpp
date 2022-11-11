@@ -5,7 +5,6 @@ WHITESPACE = re.compile('\S')
 LEXER_REGEX_FLAGS = re.IGNORECASE
 
 
-
 class Special(Symbol):
     LAMBDA = '__LAMBDA__'
     START = '__START__'
@@ -41,7 +40,6 @@ class Tag(Terminal):
     FOR = 'for'
     WHILE = 'while'
     DO = 'do'
-    VOID = 'void'
     MAX = 'max'
     MIN = 'min'
     STATIC = 'static'
@@ -49,10 +47,11 @@ class Tag(Terminal):
     PUBLIC = 'public'
     PRINT = 'print'
     MAIN = 'main'
+    VOID = 'void'
 
 
 LEXER_RULES = [
-    LexerRule(Tag.TYPE_HINT, r'\bint|boolean|float|double|char|void\b'),
+    LexerRule(Tag.TYPE_HINT, r'\bint|boolean|float|double|char\b'),
     LexerRule(Tag.MATH_OPERATOR, r'\+\+|\-\-|\*|/|\%|\+|\-'),
     LexerRule(Tag.COMPARE, r'==\!=|\<=|\<|\>=|\>'),
     LexerRule(Tag.NUMBER_FLOAT, r'[\-\+]?\d+\.\d+'),
@@ -76,6 +75,7 @@ LEXER_RULES = [
     LexerRule(Tag.PUBLIC, r'\bpublic\b'),
     LexerRule(Tag.PRINT, r'\bSystem\.out\.println\b'),
     LexerRule(Tag.MAIN, r'\bMain|main\b'),
+    LexerRule(Tag.VOID, r'\bvoid\b'),
 
     LexerRule(Tag.LBRACKET, r'\('),
     LexerRule(Tag.RBRACKET, r'\)'),

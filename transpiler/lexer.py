@@ -56,10 +56,7 @@ class Lexer:
 
         while (token := self._parse_token()):
             yield token
-        yield Token(Special.LIMITER, Special.LIMITER.value, -1, -1)
-
-        self.buffer = None
-        self.buffer_length = -1
+        return
 
     def _parse_token(self) -> Token | None:
         if self.pos > self.buffer_length:
