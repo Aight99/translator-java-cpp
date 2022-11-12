@@ -2,7 +2,6 @@ from enum import Enum
 
 
 class LexerRule:
-
     def __init__(self, tag: Enum, regex: str) -> None:
         self.tag = tag
         self.regex = regex
