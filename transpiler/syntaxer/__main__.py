@@ -1,5 +1,7 @@
 import sys
 
+from transpiler.constants import Tag, LEXER_RULES
+from transpiler.lexer.lexer import Lexer
 from transpiler.syntaxer.earley import Grammar, EarleyParse
 
 
@@ -9,15 +11,16 @@ def main():
     # print(grammar)
 
     with open('../../example/text.txt') as f:
-        sentence = f.read()
+        document = f.read()
+    lexer = Lexer(Tag, LEXER_RULES, filepath)
+    lexer.buffer = document
+    tokens = list(lexer.tokens)
 
-    earley = EarleyParse(sentence, grammar)
-    earley.parse()
-    parse = earley.get_parse()
-    print(earley.chart)
+    earley = EarleyParse(tokens, grammar)
+    parse = earley.get_parse_tree()
 
     if parse is None:
-        print(sentence + ' is None :c \n')
+        print(document + ' is None :c \n')
     else:
         parse.pretty_print()
 

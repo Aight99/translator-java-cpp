@@ -1,24 +1,28 @@
-<program> -> public class <identifier> { <main_func> } | public class <identifier> { <func_declaration> <main_func> }
+<program> -> public class <id> { <main_func> } | public class <id> { <func_declaration> <main_func> }
 
-<program> -> <public> <keyword_class> <identifier> <left_curly_bracket> <main_func> <right_curly_bracket>
-<main_func> -> <public> <static> <void> <main> <left_bracket> <String[]args> <right_bracket> <left_curly_bracket> <code_block> <right_curly_bracket> | <public> <static> <void> <main> <left_bracket> <String[]args> <right_bracket> <left_curly_bracket> <right_curly_bracket>
+<program> -> <public> <class> <id> <lbracket_curly> <main_func> <rbracket_curly>
+<main_func> -> <public> <static> <void> <main> <lbracket> <String[]args> <rbracket> <lbracket_curly> <code_block> <rbracket_curly> | <public> <static> <void> <main> <lbracket> <String[]args> <rbracket> <lbracket_curly> <rbracket_curly>
 
-<program> -> <public> <keyword_class> <identifier> <left_curly_bracket> <right_curly_bracket>
-<main_func> -> <public> <static> <void> <main> <left_bracket> <String[]args> <right_bracket> <left_curly_bracket> <code_block> <right_curly_bracket> | <public> <static> <void> <main> <left_bracket> <String[]args> <right_bracket> <left_curly_bracket> <right_curly_bracket>
+<program> -> <public> <class> <id> <lbracket_curly> <rbracket_curly>
+<main_func> -> <public> <static> <void> <main> <lbracket> <String[]args> <rbracket> <lbracket_curly> <code_block> <rbracket_curly> | <public> <static> <void> <main> <lbracket> <String[]args> <rbracket> <lbracket_curly> <rbracket_curly>
+
+<main_func> -> <public> <static> <void> <main> <lbracket> <rbracket> <lbracket_curly> <code_block> <rbracket_curly> | <public> <static> <void> <main> <lbracket> <rbracket> <lbracket_curly> <rbracket_curly>
 
 
-<keyword_class> -> class
-<left_curly_bracket> -> {
-<right_curly_bracket> -> }
-<left_bracket> -> (
-<right_bracket> -> )
+<class> -> class
+<lbracket_curly> -> {
+<rbracket_curly> -> }
+<lbracket> -> (
+<rbracket> -> )
+<lbracket_square> -> [
+<rbracket_square> -> ]
 <public> -> public
 <static> -> static
 <void> -> void
 <main> -> main
 <String[]args> -> String[]args
 
-<identifier> -> <identifier_first_symbol> <identifier_symbol> | <identifier_first_symbol>
+<id> -> <identifier_first_symbol> <identifier_symbol> | <identifier_first_symbol>
 <identifier_first_symbol> -> <letter> | _
 <letter> -> a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z | A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z
 <identifier_symbol> -> <identifier_first_symbol> <identifier_symbol> | <digit> <identifier_symbol> | <identifier_first_symbol> | <digit>
@@ -26,30 +30,30 @@
 <main_func> -> public static void main (String[]args) { <code_block> } | public static void main (String[]args) {}
 <code_block> -> <instruction><code_block> | <instruction>
 <instruction> -> <assignment>; | <variable_declaration>; | <func_call>; | <expression>; | <loop> | <condition> | <func_return>;
-<assignment> -> <identifier> <assignment_operator> <expression>
+<assignment> -> <id> <assignment_operator> <expression>
 <assignment_operator> -> = | += | -= | \= | %= | *=
-<expression> -> <logical_expression> | <math_expression> | <symbol_value> | <identifier> | <func_call> | <string_literal>
+<expression> -> <logical_expression> | <math_expression> | <symbol_value> | <id> | <func_call> | <string_literal>
 <logical_expression> -> <math_expression> <comparison_operator> <math_expression> | <symbol_value> <comparison_operator> <symbol_value> | <bool_value> | <logical_expression> && <logical_expression> | <logical_expression> || <logical_expression> | (<logical_expression>)
-<math_expression> -> <math_expression> <addition_sign> <math_expression> | <math_expression> <multiplication_sign> <math_expression> | <number> | <identifier> | (<math_expression>) | -<math_expression> | <func_call>
+<math_expression> -> <math_expression> <addition_sign> <math_expression> | <math_expression> <multiplication_sign> <math_expression> | <number> | <id> | (<math_expression>) | -<math_expression> | <func_call>
 <addition_sign> -> + | -
 <multiplication_sign> -> * | / | %
-<number> -> <integer> | <float_number>
-<integer> -> <digit><integer> | <digit>
-<float_number> -> <integer>.<integer>
+<number> -> <number_int> | <number_float>
+<number_int> -> <digit><number_int> | <digit>
+<number_float> -> <number_int>.<number_int>
 <comparison_operator> -> == | ! = | > | < | >= | <=
 <symbol_value> -> '<letter>' | '<digit>' | '<other_symbol>'
 <other_symbol> -> _ | ! | @ | # | $ | % | ^ | & | * | ( | ) | - | + | [ | ] | { | } | № |; | : | ? | = | < | > | . | ,
 <condition> -> if (<logical_expression>) {<code_block>} | if (<logical_expression>) {<code_block>} else {<code_block>} | if (<logical_expression>) {<code_block>} else <condition> | if (<logical_expression>) {} | if (<logical_expression>) {} else {<code_block>} | if (<logical_expression>) {<code_block>} else {} | if (<logical_expression>) {} else {} | if (<logical_expression>) {} else <condition>
 <bool_value> -> true | false
-<func_declaration> -> static <func_return_type> <identifier> (<function_params>) {<code_block>} <func_declaration> | static <func_return_type> <identifier> (<function_params>) {<code_block>} | static <func_return_type> <identifier> (<function_params>) {} <func_declaration> | static <func_return_type> <identifier> (<function_params>) {} | static <func_return_type> <identifier> () {<code_block>} <func_declaration> | static <func_return_type> <identifier> () {<code_block>} | static <func_return_type> <identifier> () {} <func_declaration> | static <func_return_type> <identifier> () {}
+<func_declaration> -> static <func_return_type> <id> (<function_params>) {<code_block>} <func_declaration> | static <func_return_type> <id> (<function_params>) {<code_block>} | static <func_return_type> <id> (<function_params>) {} <func_declaration> | static <func_return_type> <id> (<function_params>) {} | static <func_return_type> <id> () {<code_block>} <func_declaration> | static <func_return_type> <id> () {<code_block>} | static <func_return_type> <id> () {} <func_declaration> | static <func_return_type> <id> () {}
 <func_return_type> -> <type> | void
 <type> -> <value_type>
 <value_type> -> boolean | char | int | float | double | String
-<function_params> -> <value_type> <identifier> | <value_type> <identifier>, <function_params>
+<function_params> -> <value_type> <id> | <value_type> <id>, <function_params>
 <code_block> -> <code_block>
 <func_return> -> return <expression>
-<variable_declaration> -> <value_type> <identifier> | <value_type> <identifier> = <expression>
-<func_call> -> <identifier> (<func_call_params>) | <identifier> () | System.out.println (<func_call_params>) | System.out.print (<func_call_params>) | Math.max (<func_call_params>) | Math.min (<func_call_params>)
+<variable_declaration> -> <value_type> <id> | <value_type> <id> = <expression>
+<func_call> -> <id> (<func_call_params>) | <id> () | System.out.println (<func_call_params>) | System.out.print (<func_call_params>) | Math.max (<func_call_params>) | Math.min (<func_call_params>)
 <func_call_params> -> <expression> | <expression>, <func_call_params>
 <loop> -> while (<logical_expression>) {<code_block>} | do {<code_block>} while (<logical_expression>); | for (<variable_declaration>; <logical_expression>; <assignment>) {<code_block>} | for (<assignment>; <logical_expression>; <assignment>) {<code_block>} | while (<logical_expression>) {} | do {} while (<logical_expression>); | for (<variable_declaration>; <logical_expression>; <assignment>) {} | for (<assignment>;<logical_expression>;<assignment>) {}
 <string_literal> -> "<string_letters>" | ""
