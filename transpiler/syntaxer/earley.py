@@ -190,7 +190,7 @@ class EarleyParse:
 
     def scanner(self, state, pos):
         if state.chart_index < len(self.words):
-            word = self.words[state.chart_index].value
+            word = str(self.words[state.chart_index].tag)
             if any((word in r) for r in self.grammar[state.next_to_parse()]):
                 self.chart[pos + 1].add(EarleyState(Rule(state.next_to_parse(), [word]),
                                                     dot=1, sent_pos=state.chart_index,
@@ -228,6 +228,7 @@ class EarleyParse:
 
         self.__parse()
         start = Grammar.get_starting_non_terminal()
+        # print(self.chart)
         for state in self.chart[-1]:
             if state.is_complete() and state.rule.lhs == start \
                     and state.sentence_position == 0 and state.chart_index == len(self.words):
