@@ -54,7 +54,7 @@ class Lexer:
         assert self.buffer is not None, 'nothing to tokenize'
         self.buffer_length = len(self.buffer)
 
-        while (token := self._parse_token()):
+        while token := self._parse_token():
             yield token
         return
 

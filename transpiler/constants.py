@@ -48,6 +48,9 @@ class Tag(Terminal):
     PRINT = 'print'
     MAIN = 'main'
     VOID = 'void'
+    STRING = 'string_args'
+
+
 
 
 LEXER_RULES = [
@@ -76,6 +79,7 @@ LEXER_RULES = [
     LexerRule(Tag.PRINT, r'\bSystem\.out\.println\b'),
     LexerRule(Tag.MAIN, r'\bMain|main\b'),
     LexerRule(Tag.VOID, r'\bvoid\b'),
+    LexerRule(Tag.STRING, r'\bString\[\]\sargs\b'),
 
     LexerRule(Tag.LBRACKET, r'\('),
     LexerRule(Tag.RBRACKET, r'\)'),
