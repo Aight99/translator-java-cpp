@@ -24,8 +24,7 @@ class Tag(Terminal):
     SEMICOLON = 'semicolon'
     COMMA = 'comma'
     DOT = 'dot'
-    QUOTE = "quote"
-    DOUBLE_QUOTE = "double_quote"
+    CHAR = 'char'
     TYPE_HINT = 'type_hint'
     COMPARE = 'compare'
     MATH_OPERATOR = 'math_operator'
@@ -49,19 +48,20 @@ class Tag(Terminal):
     MAIN = 'main'
     VOID = 'void'
     STRING = 'string_args'
-
-
+    INCREMENT = 'increment'
+    RETURN = 'return'
 
 
 LEXER_RULES = [
     LexerRule(Tag.TYPE_HINT, r'\bint|boolean|float|double|char\b'),
-    LexerRule(Tag.MATH_OPERATOR, r'\+\+|\-\-|\*|/|\%|\+|\-'),
+    LexerRule(Tag.OP_ASSIGN, r'\+=|\-=|\*=|/=|\%='),
+    LexerRule(Tag.INCREMENT, r'\+\+|\-\-'),
+    LexerRule(Tag.MATH_OPERATOR, r'\*|/|\%|\+|\-'),
     LexerRule(Tag.COMPARE, r'==\!=|\<=|\<|\>=|\>'),
     LexerRule(Tag.NUMBER_FLOAT, r'[\-\+]?\d+\.\d+'),
     LexerRule(Tag.BOOLEAN_OPERATOR, r'\&\&|\|\|'),
     LexerRule(Tag.NUMBER_INT, r'[\-\+]?\d+'),
 
-    LexerRule(Tag.OP_ASSIGN, r'\+=|\-=|\*=|/=|\%='),
     LexerRule(Tag.BOOLEAN_NOT, r'\!'),
     LexerRule(Tag.ASSIGN, r'='),
     LexerRule(Tag.BOOLEAN_VALUE, r'\btrue|false\b'),
@@ -79,6 +79,7 @@ LEXER_RULES = [
     LexerRule(Tag.PRINT, r'\bSystem\.out\.println\b'),
     LexerRule(Tag.MAIN, r'\bMain|main\b'),
     LexerRule(Tag.VOID, r'\bvoid\b'),
+    LexerRule(Tag.RETURN, r'\breturn\b'),
     LexerRule(Tag.STRING, r'\bString\[\]\sargs\b'),
 
     LexerRule(Tag.LBRACKET, r'\('),
@@ -90,8 +91,7 @@ LEXER_RULES = [
     LexerRule(Tag.SEMICOLON, r';'),
     LexerRule(Tag.COMMA, r','),
     LexerRule(Tag.DOT, r'\.'),
-    LexerRule(Tag.QUOTE, r"\'"),
-    LexerRule(Tag.DOUBLE_QUOTE, r'\"'),
+    LexerRule(Tag.CHAR, r"\'.\'"),
 
     LexerRule(Tag.ID, r'\b[_a-zA-Z]\w*\b'),
 ]
