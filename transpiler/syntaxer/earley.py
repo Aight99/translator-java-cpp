@@ -2,6 +2,17 @@ from collections import defaultdict
 from nltk.tree import Tree
 
 
+class SyntaxAnalyzerError(Exception):
+
+    def __init__(self, line, message="Синтаксическая ошибка в строке"):
+        self.line = line
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.message} {self.line}'
+
+
 class Rule:
     """
     lhs -> rhs
@@ -37,7 +48,6 @@ class Grammar:
     def add(self, rule):
         self.rules[rule.lhs].append(rule)
 
-    # Здесь загружается грамматика, которая ничего не знает о тексте
     @staticmethod
     def load_grammar(fpath):
         grammar = Grammar()
@@ -178,11 +188,9 @@ class EarleyParse:
 
     def __init__(self, tokens, grammar):
         self.grammar = grammar
-        # TODO delete this
-        print("tokens = " + str(tokens))
-        print("words = " + str([(a.tag, a.line) for a in tokens]))
         self.words = tokens
         self.chart = Chart.init(len(self.words) + 1)
+        self.current_token_index = 0
 
     def predictor(self, state, pos):
         for rule in self.grammar[state.next_to_parse()]:
@@ -208,8 +216,9 @@ class EarleyParse:
     def __try_find_error(self):
         for i, chart in enumerate(self.chart):
             if len(chart) == 0:
-                print(f"Ошибка где-то около {self.words[i - 1].line}")
-                break
+                raise SyntaxAnalyzerError(self.words[i - 1].line)
+                # print(f"Ошибка где-то около {self.words[i - 1].line}")
+                # break
 
     def __parse(self):
         for i in range(len(self.chart)):
@@ -225,16 +234,13 @@ class EarleyParse:
     def get_parse_tree(self):
         def build_tree(tree_state):
             if self.grammar.is_tag(tree_state.rule.lhs):
-                # TODO delete this
-                # try to get token
-                # print('Tag: ' + str(tree_state.rule.rhs[0]))
-                return Tree(tree_state.rule.lhs, [tree_state.rule.rhs[0]])
+                self.current_token_index += 1
+                return Tree(tree_state.rule.lhs, [self.words[self.current_token_index - 1]])
             return Tree(tree_state.rule.lhs,
                         [build_tree(s) for s in tree_state.back_pointers])
 
         self.__parse()
         start = Grammar.get_starting_non_terminal()
-        # print(self.chart)
         for state in self.chart[-1]:
             if state.is_complete() and state.rule.lhs == start \
                     and state.sentence_position == 0 and state.chart_index == len(self.words):

@@ -22,8 +22,8 @@ def main():
     if parse is None:
         print('Синтакс ерор :c \n')
     else:
-        # parse.pretty_print()
-        print("Done")
+        parse.pretty_print()
+        # print("Done")
 
 
 if __name__ == '__main__':
