@@ -20,9 +20,10 @@ def main():
     parse = earley.get_parse_tree()
 
     if parse is None:
-        print(document + ' is None :c \n')
+        print('Синтакс ерор :c \n')
     else:
-        parse.pretty_print()
+        # parse.pretty_print()
+        print("Done")
 
 
 if __name__ == '__main__':

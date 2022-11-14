@@ -180,7 +180,7 @@ class EarleyParse:
         self.grammar = grammar
         # TODO delete this
         print("tokens = " + str(tokens))
-        print("words = " + str([a.tag for a in tokens]))
+        print("words = " + str([(a.tag, a.line) for a in tokens]))
         self.words = tokens
         self.chart = Chart.init(len(self.words) + 1)
 
@@ -205,6 +205,12 @@ class EarleyParse:
                                                 chart_pos=pos,
                                                 back_pointers=(prev_state.back_pointers + [state])))
 
+    def __try_find_error(self):
+        for i, chart in enumerate(self.chart):
+            if len(chart) == 0:
+                print(f"Ошибка где-то около {self.words[i - 1].line}")
+                break
+
     def __parse(self):
         for i in range(len(self.chart)):
             for state in self.chart[i]:
@@ -221,7 +227,7 @@ class EarleyParse:
             if self.grammar.is_tag(tree_state.rule.lhs):
                 # TODO delete this
                 # try to get token
-                print('Tag: ' + str(tree_state.rule.rhs[0]))
+                # print('Tag: ' + str(tree_state.rule.rhs[0]))
                 return Tree(tree_state.rule.lhs, [tree_state.rule.rhs[0]])
             return Tree(tree_state.rule.lhs,
                         [build_tree(s) for s in tree_state.back_pointers])
@@ -233,4 +239,5 @@ class EarleyParse:
             if state.is_complete() and state.rule.lhs == start \
                     and state.sentence_position == 0 and state.chart_index == len(self.words):
                 return build_tree(state)
+        self.__try_find_error()
         return None
