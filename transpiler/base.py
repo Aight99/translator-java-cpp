@@ -2,7 +2,6 @@ from enum import Enum
 
 
 class LexerRule:
-
     def __init__(self, tag: Enum, regex: str) -> None:
         self.tag = tag
         self.regex = regex
@@ -10,10 +9,10 @@ class LexerRule:
 
 class Symbol(Enum):
     def __repr__(self) -> str:
-        return '<' + str(self.value) + '>'
+        return str(self.value)
 
     def __str__(self) -> str:
-        return '<' + str(self.value) + '>'
+        return str(self.value)
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):
