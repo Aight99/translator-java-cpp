@@ -59,34 +59,57 @@ class Generator:
 
     def __get_func_code(self, func_tree: nltk.Tree):
         func_name = ''
-        func_in_print = False
+        bracket_stack = []
         func_code_string = ''
         for subtree in func_tree.subtrees():
             if subtree.label() == '<code_block>':
                 for leaf in subtree.leaves():
                     leaf_value = str(leaf)
                     match func_name:
+                        # if token in println
                         case 'print':
-                            if not func_in_print:
-                                if leaf_value != '(' and leaf_value != ',' and leaf_value != ')' \
-                                        and leaf_value != 'Math.max' and leaf_value != 'Math.min':
-                                    func_code_string += ' << ' + leaf_value + ''
+                            # if token is inside println
+                            if len(bracket_stack) > 0:
+                                if leaf_value == '(':
+                                    bracket_stack.append('')
                                 elif leaf_value == ')':
-                                    func_code_string += ' << "\\n"'
-                                    func_name = ''
-                                elif leaf_value == 'Math.max':
-                                    func_code_string += ' << ' + 'std::max'
-                                    func_in_print = True
-                                elif leaf_value == 'Math.min':
-                                    func_code_string += ' << ' + 'std::min'
-                                    func_in_print = True
+                                    bracket_stack.pop()
+                                if len(bracket_stack) > 0:
+                                    func_code_string += self._formatize_token(leaf_value)
+                            # if token is the start or end of println
                             else:
-                                if leaf_value == ')':
-                                    func_in_print = False
+                                if leaf_value == '(':
+                                    bracket_stack.append('')
+                                    func_code_string += ' << '
+                                elif leaf_value == ';':
+                                    func_name = ''
+                                    func_code_string += ' << "\\n";\n'
+                        # if token in for loop (to fix line-break after ';')
+                        case 'for':
+                            # if token is inside for loop
+                            if len(bracket_stack) > 0:
+                                if leaf_value == '(':
+                                    bracket_stack.append('')
+                                    func_code_string += '('
+                                elif leaf_value == ')':
+                                    bracket_stack.pop()
+                                    func_code_string += ')'
+                                elif leaf_value == ';':
+                                    func_code_string += '; '
+                                else:
+                                    func_code_string += self._formatize_token(leaf_value)
+                            # if token is the start or end of for loop
+                            else:
+                                if leaf_value == '(':
+                                    bracket_stack.append('')
+                                elif leaf_value == ';':
+                                    func_name = ''
                                 func_code_string += self._formatize_token(leaf_value)
                         case _:
                             if leaf_value == 'System.out.println':
                                 func_name = 'print'
+                            elif leaf_value == 'for':
+                                func_name = 'for'
                             func_code_string += self._formatize_token(leaf_value)
                 return func_code_string
 
