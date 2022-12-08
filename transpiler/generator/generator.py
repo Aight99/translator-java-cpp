@@ -50,11 +50,15 @@ class Generator:
 
     def __get_func_params(self, func_tree: nltk.Tree):
         params_string = ''
+        i = 0
         for subtree in func_tree.subtrees():
             if subtree.label() == '<function_params>':
                 for leaf in subtree.leaves():
                     params_string += self._formatize_token(str(leaf))
                 break
+            elif subtree.label() == '<func_declaration>' and i > 0:
+                break
+            i = i + 1
         return params_string
 
     def __get_func_code(self, func_tree: nltk.Tree):
