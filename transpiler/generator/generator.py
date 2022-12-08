@@ -28,7 +28,7 @@ class Generator:
             case 'boolean':
                 formatized_token = 'bool '
             # tokens with a space after
-            case 'int' | 'float' | 'double' | 'char' | ',':
+            case 'int' | 'float' | 'double' | 'char' | ',' | 'return':
                 formatized_token = token + ' '
             # tokens with a space before and after
             case '<' | '>' | '<=' | '<=' | '==' | '!=' | \
@@ -102,7 +102,7 @@ class Generator:
                             else:
                                 if leaf_value == '(':
                                     bracket_stack.append('')
-                                elif leaf_value == ';':
+                                elif leaf_value == '{':
                                     func_name = ''
                                 func_code_string += self._formatize_token(leaf_value)
                         case _:
