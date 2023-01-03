@@ -1,3 +1,5 @@
+import string
+
 from transpiler.base import Symbol, Terminal, LexerRule
 import re
 
@@ -95,3 +97,23 @@ LEXER_RULES = [
 
     LexerRule(Tag.ID, r'\b[_a-zA-Z]\w*\b'),
 ]
+
+VARIABLE_TYPES = ['int', 'byte', 'short', 'long', 'float', 'char', 'boolean', 'double', 'String']
+LETTERS = list(string.ascii_letters) + ['_']
+
+KEYWORDS = VARIABLE_TYPES + 'class do else for if public return static while'.split(' ')
+
+
+class Label(Symbol):
+    def __eq__(self, other) -> bool:
+        if str(self.value) == other:
+            return True
+        return False
+
+    FUNC_DECL = '<func_declaration>'
+    VAR_DECL = '<var_declaration>'
+    ID = '<id>'
+    FUNC_TYPE = '<func_return_type>'
+    FUNC_PARAMS = '<function_params>'
+    MAIN_FUNC = '<main_func>'
+    CODE_BLOCK = '<code_block>'
