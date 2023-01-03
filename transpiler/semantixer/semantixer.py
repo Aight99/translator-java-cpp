@@ -1,5 +1,11 @@
 from nltk.tree import Tree
 
+from transpiler.base import TranspilerError
+
+
+class SemanticError(TranspilerError):
+    pass
+
 
 class SemanticAnalyzer:
     def __init__(self):
