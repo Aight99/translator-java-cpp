@@ -1,13 +1,12 @@
 from transpiler.constants import Tag, LEXER_RULES
 from transpiler.lexer.lexer import Lexer
 from transpiler.syntaxer.earley import Grammar, EarleyParse
-from transpiler.semantixer.semantixer import SemanticAnalyzer
+from transpiler.semantixer.semantixer import SemanticAnalyzer, get_tree
 
 
 def main():
     filepath = '../../example/grammar.txt'
     grammar = Grammar.load_grammar(filepath)
-    # print(grammar)
 
     with open('../../example/semantic.txt') as f:
         document = f.read()
@@ -16,11 +15,11 @@ def main():
     tokens = list(lexer.tokens)
 
     earley = EarleyParse(tokens, grammar)
-    parse = earley.get_parse_tree()
+    tree = earley.get_parse_tree()
 
     semantixer = SemanticAnalyzer()
-    print(semantixer.get_tree_labels(parse))
-    print(semantixer.is_correct(parse))
+    print(get_tree(tree))
+    print(semantixer.is_correct(tree))
 
 
 if __name__ == '__main__':
