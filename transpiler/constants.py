@@ -119,6 +119,7 @@ class Label(Symbol):
     FUNC_CALL_PARAMS = '<func_call_params>'
     LBRACKET_CURLY = '<lbracket_curly>'
     RBRACKET_CURLY = '<rbracket_curly>'
+    ASSIGN = '<assign>'
     INSTRUCTION = '<instruction>'
 
     MATH_EXPR = '<math_expression>'

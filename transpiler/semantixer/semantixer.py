@@ -179,30 +179,37 @@ class FunctionAnalyzer:
                         assert self.returns_dict[self.current_scope] != True, f'Недостижимый фрагмент кода'
 
                     case Label.ASSIGNMENT:
-                        var_id = subtree[0]
-                        math_expr = subtree[2, 0]
-                        if var_id.label() != Label.ID:
-                            var_id = subtree[1, 0]
+                        tree_parts = [tree for tree in subtree]
+                        var_id = subtree[0, 0]
+                        var_type = self.__get_id_type(var_id)
+                        if len(tree_parts) == 3:
+                            assign = subtree[1]
+                            assert var_type != Type.NONE, f'Переменная {var_id} не объявлена в окружении {self.current_scope}'
+                            if assign.label() != Label.ASSIGN:
+                                assert var_type != Type.BOOLEAN, f'Присваивание с операцией недопустимо для типа {var_type.name}'
+                            expr = subtree[2, 0]
+                            self.__check_expr(var_type, expr)
                         else:
-                            var_id = subtree[0, 0]
-                        id_type = self.__get_id_type(var_id)
-                        assert id_type != Type.NONE, f'Переменная {var_id} не объявлена в окружении {self.current_scope}'
-                        assert id_type >= self.__get_math_expr_type(
-                            math_expr), f'Тип переменной {var_id} не соответствует типу выражения'
+                            assert var_type != Type.BOOLEAN, f'Инкремент и декремент недопустим для типа {var_type.name}'
+                            assert self.__get_var(var_id).is_initialized, f'Переменная {var_id} не инициализирована'
 
                     case Label.VAR_DECL:
                         var_id = subtree[1, 0]
                         var_type = subtree[0, 0]
                         assert is_correct_name(
                             var_id), f'Использовано ключевое слово для идентификатора {var_id} {subtree}'
-                        is_initialized = False
+                        self.__save_var(var_id, var_type)
                         if len([elem for elem in subtree]) > 2:
-                            is_initialized = True
-                        self.__save_var(var_id, var_type, is_initialized)
-                        
-                        var_type = self.__get_id_type(var_id)
-                        expr = subtree[3, 0]
-                        self.__check_expr(var_type, expr)
+                            var = self.__get_var(var_id)
+                            var.init()
+                            var_type = var.type
+                            expr = subtree[3, 0]
+                            self.__check_expr(var_type, expr)
+
+                        for key, value in self.vars_dict.items():
+                            print(key)
+                            for var in value:
+                                print(var)
 
                     case Label.FUNC_CALL:
                         self.__check_func_call(subtree)
@@ -308,7 +315,8 @@ class FunctionAnalyzer:
                     expr[0]), f'Возвращаемое значение не соответствует требуемому типу {needed_type.name}'
             case Label.FUNC_CALL:
                 self.__check_func_call(expr)
-                assert needed_type >= self.__get_func_type(expr), f'Возвращаемое значение не соответствует требуемому типу {needed_type.name}'
+                assert needed_type >= self.__get_func_type(
+                    expr), f'Возвращаемое значение не соответствует требуемому типу {needed_type.name}'
 
     def __check_func_call(self, tree):
         func_id = tree[0, 0].value
