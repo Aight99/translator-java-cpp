@@ -9,13 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 class SemantixerTestCase(TestCase):
-    def setUp(self) -> None:
+    def check_correct(self, code):
         filepath = '../example/grammar.txt'
         self.grammar = Grammar.load_grammar(filepath)
         self.lexer = Lexer(Tag, LEXER_RULES, filepath)
         self.semantixer = SemanticAnalyzer()
 
-    def check_correct(self, code):
         self.lexer.buffer = code
         tokens = list(self.lexer.tokens)
         earley = EarleyParse(tokens, self.grammar)
@@ -24,6 +23,11 @@ class SemantixerTestCase(TestCase):
         return is_correct
 
     def check_wrong(self, code, err=SemanticError, msg=None):
+        filepath = '../example/grammar.txt'
+        self.grammar = Grammar.load_grammar(filepath)
+        self.lexer = Lexer(Tag, LEXER_RULES, filepath)
+        self.semantixer = SemanticAnalyzer()
+
         self.lexer.buffer = code
         tokens = list(self.lexer.tokens)
         earley = EarleyParse(tokens, self.grammar)
@@ -48,6 +52,47 @@ class SemantixerTestCase(TestCase):
             }
         """)
 
+    def test_multiple_function_declaration(self):
+        self.check_correct("""
+            public class Main
+            {
+                public static void plus(int a, int b, int c) {
+                    System.out.println(a + b + c);
+                }
+                
+                public static void plus(int a, int b) {
+                    System.out.println(a + b);
+                }
+                
+                public static void main(String[] args) {
+                   int a;
+                   int b;
+                   a = 5;
+                   int k;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void plus(int a, int b) {
+                    System.out.println(a + b);
+                }
+                
+                public static void plus(int a, int b) {
+                    System.out.println(a + b);
+                }
+                
+                public static void main(String[] args) {
+                   int a;
+                   int b;
+                   a = 5;
+                   int k;
+                }
+            }
+        """)
+
     def test_multiple_declaration(self):
         self.check_wrong("""
             public class Main
@@ -55,6 +100,22 @@ class SemantixerTestCase(TestCase):
                 public static void main(String[] args) {
                     int a = 1;
                     int a = 2;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void plus(int a, int b) {
+                    System.out.println(a);
+                }
+            
+                public static void main(String[] args) {
+                    plus(c, e);
+                    int c = 10;
+                    int e = 5;
+                    System.out.println(e);
                 }
             }
         """)
@@ -69,6 +130,98 @@ class SemantixerTestCase(TestCase):
             }
         """)
 
+    def test_wrong_type(self):
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    char a = true;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    int a = true;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    int a = 5.0;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    boolean a = 'a';
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    boolean a = 5;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    boolean a = 5.0;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    int a = 5;
+                    char b = a;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    int a = 5;
+                    boolean b = a;
+                }
+            }
+        """)
+
+
+# Correct tests
+'''
+public class Main
+{
+    public static void main(String[] args) {
+       for (int i = 0; 5 > 0; ) {
+           System.out.print(i);
+       }
+    }
+}
+'''
+
+# Wrong tests
+'''
+
+'''
 
 if __name__ == '__main__':
     main()
