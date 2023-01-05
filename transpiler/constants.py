@@ -100,7 +100,7 @@ LEXER_RULES = [
 
 VARIABLE_TYPES = ['int', 'byte', 'short', 'long', 'float', 'char', 'boolean', 'double', 'String']
 LETTERS = list(string.ascii_letters) + ['_']
-
+FUNCTIONS = ['System.out.println', 'Math.max', 'Math.min']
 KEYWORDS = VARIABLE_TYPES + 'class do else for if public return static while'.split(' ')
 
 
@@ -111,9 +111,28 @@ class Label(Symbol):
         return False
 
     FUNC_DECL = '<func_declaration>'
-    VAR_DECL = '<var_declaration>'
     ID = '<id>'
     FUNC_TYPE = '<func_return_type>'
     FUNC_PARAMS = '<function_params>'
     MAIN_FUNC = '<main_func>'
     CODE_BLOCK = '<code_block>'
+    FUNC_CALL_PARAMS = '<func_call_params>'
+    LBRACKET_CURLY = '<lbracket_curly>'
+    RBRACKET_CURLY = '<rbracket_curly>'
+    INSTRUCTION = '<instruction>'
+
+    MATH_EXPR = '<math_expression>'
+    LOGICAL_EXPR = '<logical_expression>'
+    CHAR = '<char>'
+    NUMBER = '<number>'
+    NUMBER_INT = '<number_int>'
+    NUMBER_FLOAT = '<number_float>'
+
+    # Виды инструкций
+    ASSIGNMENT = '<assignment>'
+    VAR_DECL = '<variable_declaration>'
+    FUNC_CALL = '<func_call>'
+    EXPR = '<expression>'
+    LOOP = '<loop>'
+    CONDITION = '<condition>'
+    FUNC_RETURN = '<func_return>'
