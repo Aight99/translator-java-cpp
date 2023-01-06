@@ -1,16 +1,76 @@
-from enum import IntEnum
+from enum import Enum, IntEnum
 from nltk.tree import Tree
 
-from transpiler.base import TranspilerError, Token
 from transpiler.constants import KEYWORDS, Label, FUNCTIONS
 
 
-class SemanticError(TranspilerError):
-    pass
+class ErrorMessage(Enum):
+    @staticmethod
+    def func_multiple_decl(func_id):
+        return f'Функция {func_id} уже была объявлена ранее'
+
+    @staticmethod
+    def id_keyword(var_id):
+        return f'Использовано ключевое слово для идентификатора {var_id}'
+
+    @staticmethod
+    def return_not_exists(func_id):
+        return f'Отсутствует выражение с return для функции {func_id}'
+
+    @staticmethod
+    def unreachable_code():
+        return f'Недостижимый фрагмент кода'
+
+    @staticmethod
+    def var_no_decl(var_id):
+        return f'Переменная {var_id} не объявлена'
+
+    @staticmethod
+    def boolean_op_assign():
+        return f'Присваивание с операцией недопустимо для типа boolean'
+
+    @staticmethod
+    def boolean_increment():
+        return f'Инкремент и декремент недопустим для типа boolean'
+
+    @staticmethod
+    def var_no_init(var_id):
+        return f'Переменная {var_id} не инициализирована'
+
+    @staticmethod
+    def func_void_return(func_id):
+        return f'Функция {func_id} не может возвращать значения'
+
+    @staticmethod
+    def var_multiple_decl(var_id):
+        return f'Переменная {var_id} уже объявлена'
+
+    @staticmethod
+    def boolean_var_math_expr(var_id):
+        return f'Переменная {var_id} типа boolean не может участвовать в математическом выражении'
+
+    @staticmethod
+    def types_not_fit(return_type, needed_type):
+        return f'Возвращаемое значение {return_type} не соответствует требуемому типу {needed_type}'
+
+    @staticmethod
+    def func_no_decl(func_id):
+        return f'Функция {func_id} не объявлена'
+
+
+class SemanticError(Exception):
+    def __init__(self, line, description, message="Семантическая ошибка в строке"):
+        self.line = line
+        self.message = message
+        self.description = description
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.message} {self.line}: {self.description}'
 
 
 def is_correct_name(name):
-    if type(name) == Token:
+    if type(name) != str:
         name = name.value
     if name in KEYWORDS:
         return False
@@ -53,7 +113,8 @@ class SemanticAnalyzer:
     def __save_func(self, tree):
         new_func = Function(tree)
         for func in self.func_list:
-            assert new_func != func, f'Функция {new_func.id} уже была объявлена ранее'
+            if new_func == func:
+                raise SemanticError(tree[0, 0].line, ErrorMessage.func_multiple_decl(new_func.id))
         self.func_list.append(new_func)
 
 
@@ -79,7 +140,8 @@ class Function:
         for subtree in self.tree:
             if subtree.label() == Label.ID:
                 func_id = subtree[0].value
-                assert is_correct_name(func_id), f'Использовано ключевое слово для идентификатора {func_id} {subtree}'
+                if not is_correct_name(func_id):
+                    raise SemanticError(subtree[0].line, ErrorMessage.id_keyword(func_id))
         return func_id
 
     def __find_type(self):
@@ -94,7 +156,8 @@ class Function:
             if subtree.label() == Label.FUNC_PARAMS:
                 param_id = subtree[1, 0]
                 param_type = subtree[0, 0]
-                assert is_correct_name(param_id), f'Использовано ключевое слово для идентификатора {param_id} {subtree}'
+                if not is_correct_name(param_id):
+                    raise SemanticError(param_id.line, ErrorMessage.id_keyword(param_id))
                 param = Variable(param_id, param_type, True)
                 params.append(param)
                 return params + self.__find_params(subtree)
@@ -167,7 +230,8 @@ class FunctionAnalyzer:
 
         result = self.__is_correct_code(func.code)
         if func.type != Type.NONE:
-            assert self.returns_dict[0] == True, f'Отсутствует выражение с return для функции {func.id}'
+            if not self.returns_dict[0]:
+                raise SemanticError(func.tree[0, 0].line, ErrorMessage.return_not_exists(func.id))
         return result
 
     def __is_correct_code(self, tree: Tree):
@@ -176,7 +240,8 @@ class FunctionAnalyzer:
             if type(subtree) == Tree:
                 match subtree.label():
                     case Label.INSTRUCTION:
-                        assert self.returns_dict[self.current_scope] != True, f'Недостижимый фрагмент кода'
+                        if self.returns_dict[self.current_scope]:
+                            raise SemanticError(subtree[0, 0].line, ErrorMessage.unreachable_code())
 
                     case Label.ASSIGNMENT:
                         tree_parts = [tree for tree in subtree]
@@ -184,42 +249,47 @@ class FunctionAnalyzer:
                         var_type = self.__get_id_type(var_id)
                         if len(tree_parts) == 3:
                             assign = subtree[1]
-                            assert var_type != Type.NONE, f'Переменная {var_id} не объявлена в окружении {self.current_scope}'
+                            if var_type == Type.NONE:
+                                raise SemanticError(var_id.line, ErrorMessage.var_no_decl(var_id))
                             if assign.label() != Label.ASSIGN:
-                                assert var_type != Type.BOOLEAN, f'Присваивание с операцией недопустимо для типа {var_type.name}'
+                                if var_type == Type.BOOLEAN:
+                                    raise SemanticError(var_id.line, ErrorMessage.boolean_op_assign())
                             expr = subtree[2, 0]
-                            self.__check_expr(var_type, expr)
+                            self.__check_expr(var_type, expr, var_id.line)
                         else:
-                            assert var_type != Type.BOOLEAN, f'Инкремент и декремент недопустим для типа {var_type.name}'
-                            assert self.__get_var(var_id).is_initialized, f'Переменная {var_id} не инициализирована'
+                            if var_type == Type.BOOLEAN:
+                                raise SemanticError(var_id.line, ErrorMessage.boolean_increment())
+                            if not self.__get_var(var_id).is_initialized:
+                                raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
 
                     case Label.VAR_DECL:
                         var_id = subtree[1, 0]
                         var_type = subtree[0, 0]
-                        assert is_correct_name(
-                            var_id), f'Использовано ключевое слово для идентификатора {var_id} {subtree}'
+                        if not is_correct_name(var_id):
+                            raise SemanticError(var_id.line, ErrorMessage.id_keyword(var_id))
                         self.__save_var(var_id, var_type)
                         if len([elem for elem in subtree]) > 2:
                             var = self.__get_var(var_id)
                             var.init()
                             var_type = var.type
                             expr = subtree[3, 0]
-                            self.__check_expr(var_type, expr)
+                            self.__check_expr(var_type, expr, var.id.line)
 
-                        for key, value in self.vars_dict.items():
-                            print(key)
-                            for var in value:
-                                print(var)
+                        # for key, value in self.vars_dict.items():
+                        #     print(key)
+                        #     for var in value:
+                        #         print(var)
 
                     case Label.FUNC_CALL:
                         self.__check_func_call(subtree)
 
                     case Label.FUNC_RETURN:
                         func_type = self.func.type
-                        assert func_type != Type.NONE, f'Функция {self.func.id} не может возвращать значения'
+                        if func_type == Type.NONE:
+                            raise SemanticError(subtree[0, 0].line, ErrorMessage.func_void_return(self.func.id))
                         self.returns_dict[self.current_scope] = True
                         expr = subtree[1, 0]
-                        self.__check_expr(func_type, expr)
+                        self.__check_expr(func_type, expr, subtree[0, 0].line)
 
                     case Label.LBRACKET_CURLY:
                         self.current_scope += 1
@@ -241,7 +311,8 @@ class FunctionAnalyzer:
         for var_exists in self.vars_dict[self.current_scope]:
             if var_exists == var:
                 is_var_exists = True
-        assert not is_var_exists, f'Переменная {var} уже объявлена'
+        if is_var_exists:
+            raise SemanticError(var_id.line, ErrorMessage.var_multiple_decl(var.id))
         self.vars_dict[self.current_scope].append(var)
 
     def __get_math_expr_type(self, tree):
@@ -266,9 +337,12 @@ class FunctionAnalyzer:
                 case Label.ID:
                     var_id = label_tree[0]
                     id_type = self.__get_id_type(var_id)
-                    assert self.__get_var(var_id).is_initialized, f'Переменная {var_id} не инициализирована'
-                    assert id_type != Type.NONE, f'Переменная {var_id} не объявлена в окружении {self.current_scope}'
-                    assert id_type != Type.BOOLEAN, f'Переменная {var_id} типа boolean не может участвовать в математическом выражении'
+                    if not self.__get_var(var_id).is_initialized:
+                        raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
+                    if id_type == Type.NONE:
+                        raise SemanticError(var_id.line, ErrorMessage.var_no_decl(var_id))
+                    if id_type == Type.BOOLEAN:
+                        raise SemanticError(var_id.line, ErrorMessage.boolean_var_math_expr(var_id))
                     return id_type
         return max_type
 
@@ -301,27 +375,34 @@ class FunctionAnalyzer:
         functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(expressions)]
         return functions[0].type
 
-    def __check_expr(self, needed_type, expr):
+    def __check_expr(self, needed_type, expr, line):
         match expr.label():
             case Label.LOGICAL_EXPR:
-                assert needed_type == Type.BOOLEAN, f'Возвращаемое значение не соответствует требуемому типу {needed_type.name}'
+                if needed_type != Type.BOOLEAN:
+                    raise SemanticError(line, ErrorMessage.types_not_fit(Type.BOOLEAN.name, needed_type.name))
             case Label.MATH_EXPR:
-                assert needed_type >= self.__get_math_expr_type(
-                    expr), f'Возвращаемое значение не соответствует требуемому типу {needed_type.name}'
+                return_type = self.__get_math_expr_type(expr)
+                if needed_type < return_type:
+                    raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
             case Label.CHAR:
-                assert needed_type >= Type.CHAR, f'Возвращаемое значение не соответствует требуемому типу {needed_type.name}'
+                if needed_type < Type.CHAR:
+                    raise SemanticError(line, ErrorMessage.types_not_fit(Type.CHAR.name, needed_type.name))
             case Label.ID:
-                assert needed_type >= self.__get_id_type(
-                    expr[0]), f'Возвращаемое значение не соответствует требуемому типу {needed_type.name}'
+                return_type = self.__get_id_type(expr[0])
+                if needed_type < return_type:
+                    raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
             case Label.FUNC_CALL:
                 self.__check_func_call(expr)
-                assert needed_type >= self.__get_func_type(
-                    expr), f'Возвращаемое значение не соответствует требуемому типу {needed_type.name}'
+                return_type = self.__get_func_type(expr)
+                if needed_type < return_type:
+                    raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
 
     def __check_func_call(self, tree):
         func_id = tree[0, 0].value
         expressions = self.__get_func_call_params_expressions(tree)
+
         functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(expressions)]
-        assert functions != [] or func_id in FUNCTIONS, f'Функция {func_id} не объявлена'
+        if functions == [] and func_id not in FUNCTIONS:
+            raise SemanticError(tree[0, 0].line, ErrorMessage.func_no_decl(func_id))
         for param, expr in zip(functions[0].params, expressions):
-            self.__check_expr(param.type, expr)
+            self.__check_expr(param.type, expr, tree[0, 0].line)

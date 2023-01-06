@@ -45,7 +45,3 @@ class Token:
 
     def __repr__(self):
         return str(self.value) + ' ' + str(self.tag)
-
-
-class TranspilerError(Exception):
-    pass
