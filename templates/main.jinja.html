@@ -1,0 +1,44 @@
+<html>
+    <head>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@2.46.1/dist/full.css" rel="stylesheet" type="text/css" />
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="container">
+        <div class="pl-10 my-20">
+           <p class="text-4xl font-bold"> This is translator from java to c++ </p>
+        </div>
+        <div class="pl-10">
+            <form action="" method="post" enctype="multipart/form-data">
+                <div class="mb-10 flex items-end">
+                    <div class="form-control w-full max-w-xs mr-4">
+                      <label class="label">
+                        <span class="label-text">Pick a file with Java code (.java)</span>
+                      </label>
+{#                        {{ code_file.upload }}#}
+                      <input id="upload" name="upload" required type="file" accept=".java" class="file-input file-input-bordered w-full max-w-xs" />
+                    </div>
+                    <div>
+                        <button class="btn">Click</button>
+                    </div>
+                </div>
+            </form>
+            <hr/>
+            <div class="mt-10">
+                {% if exception %}
+                    <div class="alert alert-error shadow-lg">
+                      <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>{{ exception }}</span>
+                      </div>
+                    </div>
+                {% else %}
+                <div class="mockup-code">
+                    {% for line in code %}
+                        <pre data-prefix="{{ line.index }}"><code>{{ line.line }}</code></pre>
+                    {% endfor %}
+               </div>
+                {% endif %}
+            </div>
+        </div>
+    </body>
+</html>
