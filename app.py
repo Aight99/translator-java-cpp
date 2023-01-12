@@ -28,11 +28,27 @@ def text_to_array(code):
     return line_array
 
 
+def java_to_array():
+    file = open(os.path.join(app.config["UPLOAD_FOLDER"], 'text.txt'))
+    line_array = []
+    index = 1
+    while True:
+        line = file.readline()
+        if not line:
+            break
+        line_array.append({'index': index, 'line': line})
+        index += 1
+
+    file.close()
+    return line_array
+
+
 @app.route('/', methods=['GET', 'POST'])
 def main():
     form = UploadForm()
     if form.is_submitted():
         form.upload.data.save(os.path.join(app.config["UPLOAD_FOLDER"], 'text.txt'))
+    java_code = java_to_array()
     try:
         code = text_to_array(generator.compiler(app))
         exception = None
@@ -40,7 +56,7 @@ def main():
         exception = e
         code = None
 
-    return render_template('main.jinja.html', code_file=form, code=code, exception=exception)
+    return render_template('main.jinja.html', code_file=form, code=code, exception=exception, java_code=java_code)
 
 
 if __name__ == '__main__':

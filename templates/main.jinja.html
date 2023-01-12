@@ -24,20 +24,37 @@
             </form>
             <hr/>
             <div class="mt-10">
-                {% if exception %}
-                    <div class="alert alert-error shadow-lg">
-                      <div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <span>{{ exception }}</span>
-                      </div>
+                <div class="grid gap-4 grid-cols-2">
+                    <div>
+                        <div class="underline text-2xl mb-4 font-bold">Java</div>
+                        {% if exception %}
+                            <div class="alert alert-error shadow-lg mb-4">
+                              <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <span>{{ exception }}</span>
+                              </div>
+                            </div>
+                        {% endif %}
+                        <div class="mockup-code">
+                            {% for line in java_code %}
+                                <pre data-prefix="{{ line.index }}"><code>{{ line.line }}</code></pre>
+                            {% endfor %}
+                        </div>
                     </div>
-                {% else %}
-                <div class="mockup-code">
-                    {% for line in code %}
-                        <pre data-prefix="{{ line.index }}"><code>{{ line.line }}</code></pre>
-                    {% endfor %}
-               </div>
-                {% endif %}
+                    {% if not exception %}
+                        <div>
+                            <div class="underline text-2xl mb-4 font-bold">C++</div>
+                            <div class="mockup-code">
+                                {% for line in code %}
+                                    <pre data-prefix="{{ line.index }}"><code>{{ line.line }}</code></pre>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    {% endif %}
+                </div>
+
+
             </div>
         </div>
     </body>
