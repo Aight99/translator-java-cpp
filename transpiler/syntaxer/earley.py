@@ -4,7 +4,7 @@ from nltk.tree import Tree
 
 class SyntaxAnalyzerError(Exception):
 
-    def __init__(self, line, message="Синтаксическая ошибка в строке"):
+    def __init__(self, line, message="syntax error at line "):
         self.line = line
         self.message = message
         super().__init__(self.message)

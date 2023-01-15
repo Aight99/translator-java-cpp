@@ -7,59 +7,59 @@ from transpiler.constants import KEYWORDS, Label, FUNCTIONS
 class ErrorMessage(Enum):
     @staticmethod
     def func_multiple_decl(func_id):
-        return f'Функция {func_id} уже была объявлена ранее'
+        return f'function {func_id} already declared'
 
     @staticmethod
     def id_keyword(var_id):
-        return f'Использовано ключевое слово для идентификатора {var_id}'
+        return f'identifier keyword used {var_id}'
 
     @staticmethod
     def return_not_exists(func_id):
-        return f'Отсутствует выражение с return для функции {func_id}'
+        return f'missing expression with return for function {func_id}'
 
     @staticmethod
     def unreachable_code():
-        return f'Недостижимый фрагмент кода'
+        return f'unreachable code snippet'
 
     @staticmethod
     def var_no_decl(var_id):
-        return f'Переменная {var_id} не объявлена'
+        return f'variable {var_id} is not declared'
 
     @staticmethod
     def boolean_op_assign():
-        return f'Присваивание с операцией недопустимо для типа boolean'
+        return f'assignment with operation is not allowed for type boolean'
 
     @staticmethod
     def boolean_increment():
-        return f'Инкремент и декремент недопустим для типа boolean'
+        return f'increment and decrement is invalid for type boolean'
 
     @staticmethod
     def var_no_init(var_id):
-        return f'Переменная {var_id} не инициализирована'
+        return f'variable  {var_id} is not initialized'
 
     @staticmethod
     def func_void_return(func_id):
-        return f'Функция {func_id} не может возвращать значения'
+        return f'function {func_id} cannot return values'
 
     @staticmethod
     def var_multiple_decl(var_id):
-        return f'Переменная {var_id} уже объявлена'
+        return f'variable {var_id} is already declared'
 
     @staticmethod
     def boolean_var_math_expr(var_id):
-        return f'Переменная {var_id} типа boolean не может участвовать в математическом выражении'
+        return f'boolean type variable {var_id} cannot participate in a mathematical expression'
 
     @staticmethod
     def types_not_fit(return_type, needed_type):
-        return f'Возвращаемое значение {return_type} не соответствует требуемому типу {needed_type}'
+        return f'return value {return_type} does not match the required type {needed_type}'
 
     @staticmethod
     def func_no_decl(func_id):
-        return f'Функция {func_id} не объявлена'
+        return f'function {func_id} is not declared'
 
 
 class SemanticError(Exception):
-    def __init__(self, line, description, message="Семантическая ошибка в строке"):
+    def __init__(self, line, description, message="semantic error in string "):
         self.line = line
         self.message = message
         self.description = description
