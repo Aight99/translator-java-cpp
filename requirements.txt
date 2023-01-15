@@ -1,5 +1,5 @@
 sty~=1.0.4
-nltk~=3.7
+nltk
 
 # Flask Framework
 Flask~=2.2.2
@@ -12,8 +12,8 @@ Flask-SQLAlchemy==3.0.2
 Flask-WTF==1.0.1
 Flask-User==1.0.2.2
 Flask-Uploads
+WTForms~=3.0.1
 
 # Automated tests
 pytest==7.2.0
 pytest-cov==4.0.0
-WTForms~=3.0.1
