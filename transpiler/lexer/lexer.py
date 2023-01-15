@@ -84,9 +84,7 @@ class Lexer:
             return token
 
         line = self._get_line()
-        msg = f"'{self.buffer[self.pos]}' at line {line}"
-        if self.filepath is not None:
-            msg += f" ({self.filepath}:{line})"
+        msg = f"unexpected token '{self.buffer[self.pos]}' at line {line}"
         raise UnexpectedTokenError(msg)
 
     def _get_line(self):
