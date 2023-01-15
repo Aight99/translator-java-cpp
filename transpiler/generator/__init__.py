@@ -1,5 +1,6 @@
 from transpiler.constants import Tag, LEXER_RULES
 from transpiler.lexer.lexer import Lexer
+from transpiler.semantixer.semantixer import SemanticAnalyzer
 from transpiler.syntaxer.earley import Grammar, EarleyParse
 from transpiler.generator.generator import Generator
 
@@ -18,6 +19,9 @@ def compiler(app):
 
     earley = EarleyParse(tokens, grammar)
     parse = earley.get_parse_tree()
+
+    semantixer = SemanticAnalyzer()
+    semantixer.is_correct(parse)
 
     generator = Generator()
     code = generator.generate_code(parse)
