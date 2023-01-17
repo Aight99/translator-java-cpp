@@ -43,7 +43,7 @@
 <increment> -> increment
 
 <code_block> -> <instruction> <code_block> | <instruction>
-<instruction> -> <assignment> <semicolon> | <variable_declaration> <semicolon> | <func_call> <semicolon> | <expression> <semicolon> | <loop> | <condition> | <func_return> <semicolon>
+<instruction> -> <assignment> <semicolon> | <variable_declaration> <semicolon> | <func_call> <semicolon> | <loop> | <condition> | <func_return> <semicolon>
 <assignment> -> <id> <assign> <expression> | <increment> <id> | <id> <increment> | <id> <op_assign> <expression>
 <expression> -> <logical_expression> | <math_expression> | <char> | <id> | <func_call>
 <logical_expression> -> <math_expression> <compare> <math_expression> | <boolean_value> | <id> <boolean_operator> <id> | <logical_expression> <boolean_operator> <logical_expression> | <lbracket> <logical_expression> <rbracket> | <boolean_not> <logical_expression>

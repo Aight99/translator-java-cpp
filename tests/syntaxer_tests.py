@@ -39,6 +39,51 @@ class SyntaxerExceptionsTestCase(unittest.TestCase):
             }
         """)
 
+    def test_statements(self):
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    int a = 5;
+                    fun(a, a);
+                    for (int i = 0; i < a; i++) {
+                        i++;
+                    }
+                    if (true) {
+                        return 0;
+                    }
+                    return 1;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                   a + b;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                   5 * 3;
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                   a && b;
+                }
+            }
+        """)
+
     def test_bool_expr(self):
         self.check_correct("""
             public class Main
