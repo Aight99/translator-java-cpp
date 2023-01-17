@@ -139,7 +139,7 @@ class Function:
         func_id = 'main'
         for subtree in self.tree:
             if subtree.label() == Label.ID:
-                func_id = subtree[0].value
+                func_id = subtree[0, 0].value
                 if not is_correct_name(func_id):
                     raise SemanticError(subtree[0].line, ErrorMessage.id_keyword(func_id))
         return func_id
@@ -154,7 +154,7 @@ class Function:
         params = []
         for subtree in tree:
             if subtree.label() == Label.FUNC_PARAMS:
-                param_id = subtree[1, 0]
+                param_id = subtree[1, 0, 0]
                 param_type = subtree[0, 0]
                 if not is_correct_name(param_id):
                     raise SemanticError(param_id.line, ErrorMessage.id_keyword(param_id))
@@ -241,13 +241,17 @@ class FunctionAnalyzer:
                 match subtree.label():
                     case Label.INSTRUCTION:
                         if self.returns_dict[self.current_scope]:
-                            raise SemanticError(subtree[0, 0].line, ErrorMessage.unreachable_code())
+                            raise SemanticError(subtree[0, 0, 0].line, ErrorMessage.unreachable_code())
 
                     case Label.ASSIGNMENT:
-                        tree_parts = [tree for tree in subtree]
-                        var_id = subtree[0, 0]
+                        tree_parts_num = 0
+                        var_id = None
+                        for tree in subtree:
+                            if tree.label() == Label.ID:
+                                var_id = tree[0, 0]
+                            tree_parts_num += 1
                         var_type = self.__get_id_type(var_id)
-                        if len(tree_parts) == 3:
+                        if tree_parts_num == 3:
                             assign = subtree[1]
                             if var_type == Type.NONE:
                                 raise SemanticError(var_id.line, ErrorMessage.var_no_decl(var_id))
@@ -263,7 +267,7 @@ class FunctionAnalyzer:
                                 raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
 
                     case Label.VAR_DECL:
-                        var_id = subtree[1, 0]
+                        var_id = subtree[1, 0, 0]
                         var_type = subtree[0, 0]
                         if not is_correct_name(var_id):
                             raise SemanticError(var_id.line, ErrorMessage.id_keyword(var_id))
@@ -335,7 +339,7 @@ class FunctionAnalyzer:
                 case Label.CHAR:
                     return Type.CHAR
                 case Label.ID:
-                    var_id = label_tree[0]
+                    var_id = label_tree[0, 0]
                     id_type = self.__get_id_type(var_id)
                     if not self.__get_var(var_id).is_initialized:
                         raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
@@ -370,7 +374,7 @@ class FunctionAnalyzer:
         return expressions
 
     def __get_func_type(self, tree):
-        func_id = tree[0, 0].value
+        func_id = tree[0, 0, 0].value
         expressions = self.__get_func_call_params_expressions(tree)
         functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(expressions)]
         return functions[0].type
@@ -388,7 +392,7 @@ class FunctionAnalyzer:
                 if needed_type < Type.CHAR:
                     raise SemanticError(line, ErrorMessage.types_not_fit(Type.CHAR.name, needed_type.name))
             case Label.ID:
-                return_type = self.__get_id_type(expr[0])
+                return_type = self.__get_id_type(expr[0, 0])
                 if needed_type < return_type:
                     raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
             case Label.FUNC_CALL:
@@ -398,11 +402,11 @@ class FunctionAnalyzer:
                     raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
 
     def __check_func_call(self, tree):
-        func_id = tree[0, 0].value
+        func_id = tree[0, 0, 0].value
         expressions = self.__get_func_call_params_expressions(tree)
 
         functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(expressions)]
         if functions == [] and func_id not in FUNCTIONS:
-            raise SemanticError(tree[0, 0].line, ErrorMessage.func_no_decl(func_id))
+            raise SemanticError(tree[0, 0, 0].line, ErrorMessage.func_no_decl(func_id))
         for param, expr in zip(functions[0].params, expressions):
-            self.__check_expr(param.type, expr, tree[0, 0].line)
+            self.__check_expr(param.type, expr, tree[0, 0, 0].line)
