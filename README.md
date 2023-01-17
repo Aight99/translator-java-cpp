@@ -5,10 +5,6 @@
 - иметь docker 
 - клонировать этот рупозиторий
 - из корня проекта запусить команду `docker compose up -d`
-1. Ахо, Ульман: книга с драконом
-2. [https://github.com/KostikShutov/lexical-analyzer-for-js](https://vk.com/away.php?to=https%3A%2F%2Fgithub.com%2FKostikShutov%2Flexical-analyzer-for-js&cc_key=)
-
-Реализовать: лексер, синтаксический, семантический, генератор кода
 
 ## Требования
 
