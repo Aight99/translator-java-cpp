@@ -1,8 +1,8 @@
 
-<program> -> <public> <class> <main> <lbracket_curly> <main_func> <rbracket_curly> | <public> <class> <main> <lbracket_curly> <rbracket_curly> | <public> <class> <main> <lbracket_curly> <func_declaration> <main_func> <rbracket_curly> | <public> <class> <main> <lbracket_curly> <main_func> <func_declaration> <rbracket_curly>
+<program> -> <public> <class> <main> <lbracket_curly> <main_func> <rbracket_curly> | <public> <class> <main> <lbracket_curly> <rbracket_curly> | <public> <class> <main> <lbracket_curly> <func_declaration> <main_func> <rbracket_curly> | <public> <class> <main> <lbracket_curly> <func_declaration> <main_func> <func_declaration> <rbracket_curly> | <public> <class> <main> <lbracket_curly> <main_func> <func_declaration> <rbracket_curly>
 <main_func> -> <public> <static> <void> <main> <lbracket> <string_args> <rbracket> <lbracket_curly> <code_block> <rbracket_curly> | <public> <static> <void> <main> <lbracket> <string_args> <rbracket> <lbracket_curly> <rbracket_curly>
 
-<id> -> id
+<id_name> -> id
 <number_int> -> number_int
 <number_float> -> number_float
 <lbracket> -> lbracket
@@ -43,15 +43,16 @@
 <increment> -> increment
 
 <code_block> -> <instruction> <code_block> | <instruction>
-<instruction> -> <assignment> <semicolon> | <variable_declaration> <semicolon> | <func_call> <semicolon> | <expression> <semicolon> | <loop> | <condition> | <func_return> <semicolon>
+<instruction> -> <assignment> <semicolon> | <variable_declaration> <semicolon> | <func_call> <semicolon> | <loop> | <condition> | <func_return> <semicolon>
 <assignment> -> <id> <assign> <expression> | <increment> <id> | <id> <increment> | <id> <op_assign> <expression>
 <expression> -> <logical_expression> | <math_expression> | <char> | <id> | <func_call>
-<logical_expression> -> <math_expression> <compare> <math_expression> | <char> <compare> <char> | <boolean_value> | <logical_expression> <boolean_operator> <logical_expression> | <logical_expression> <boolean_operator> <logical_expression> | <lbracket> <logical_expression> <rbracket> | <boolean_not> <logical_expression>
-<math_expression> -> <math_expression> <math_operator> <math_expression> | <math_expression> <addition_sign> <math_expression> | <math_expression> <multiplication_sign> <math_expression> | <number> | <id> | <lbracket> <math_expression> <rbracket> | <addition_sign> <math_expression> | <func_call> | <increment> <math_expression> | <math_expression> <increment>
+<logical_expression> -> <math_expression> <compare> <math_expression> | <boolean_value> | <id> <boolean_operator> <id> | <logical_expression> <boolean_operator> <logical_expression> | <lbracket> <logical_expression> <rbracket> | <boolean_not> <logical_expression>
+<math_expression> -> <math_expression> <math_operator> <math_expression> | <math_expression> <addition_sign> <math_expression> | <math_expression> <multiplication_sign> <math_expression> | <char> | <number> | <id> | <lbracket> <math_expression> <rbracket> | <addition_sign> <math_expression> | <func_call> | <increment> <math_expression> | <math_expression> <increment>
 <number> -> <number_int> | <number_float>
 <condition> -> <if> <lbracket> <logical_expression> <rbracket> <lbracket_curly> <code_block> <rbracket_curly> | <if> <lbracket> <logical_expression> <rbracket> <lbracket_curly> <code_block> <rbracket_curly> <else> <lbracket_curly> <code_block> <rbracket_curly> | <if> <lbracket> <logical_expression> <rbracket> <lbracket_curly> <code_block> <rbracket_curly> <else> <condition> | <if> <lbracket> <logical_expression> <rbracket> <lbracket_curly>  <rbracket_curly> | <if> <lbracket> <logical_expression> <rbracket> <lbracket_curly>  <rbracket_curly> <else> <lbracket_curly> <code_block> <rbracket_curly> | <if> <lbracket> <logical_expression> <rbracket> <lbracket_curly> <code_block> <rbracket_curly> <else> <lbracket_curly>  <rbracket_curly> | <if> <lbracket> <logical_expression> <rbracket> <lbracket_curly>  <rbracket_curly> <else> <lbracket_curly>  <rbracket_curly> | <if> <lbracket> <logical_expression> <rbracket> <lbracket_curly>  <rbracket_curly> <else> <condition>
 <func_call> -> <id> <lbracket> <func_call_params>  <rbracket> | <id> <lbracket> <rbracket> | <print> <lbracket> <func_call_params> <rbracket> | <print> <lbracket> <rbracket> | <max> <lbracket> <func_call_params> <rbracket> | <min> <lbracket> <func_call_params> <rbracket>
 <func_declaration> -> <public> <static> <func_return_type> <id> <lbracket> <function_params> <rbracket> <lbracket_curly> <code_block> <rbracket_curly> <func_declaration> | <public> <static> <func_return_type> <id> <lbracket> <function_params> <rbracket> <lbracket_curly> <code_block> <rbracket_curly> | <public> <static> <func_return_type> <id> <lbracket> <function_params> <rbracket> <lbracket_curly>  <rbracket_curly> <func_declaration> | <public> <static> <func_return_type> <id> <lbracket> <function_params> <rbracket> <lbracket_curly>  <rbracket_curly> | <public> <static> <func_return_type> <id> <lbracket>  <rbracket> <lbracket_curly> <code_block> <rbracket_curly> <func_declaration> | <public> <static> <func_return_type> <id> <lbracket>  <rbracket> <lbracket_curly> <code_block> <rbracket_curly> | <public> <static> <func_return_type> <id> <lbracket>  <rbracket> <lbracket_curly>  <rbracket_curly> <func_declaration> | <public> <static> <func_return_type> <id> <lbracket>  <rbracket> <lbracket_curly>  <rbracket_curly>
+<id> -> <id_name> | <main>
 <func_return_type> -> <type_hint> | <void>
 <function_params> -> <type_hint> <id> | <type_hint> <id> <comma> <function_params>
 <code_block> -> <code_block>

@@ -39,7 +39,7 @@ class Lexer:
     ):
         self.terminal_cls = terminal_cls
         parts = [f'(?P<{rule.tag.value}>{rule.regex})' for rule in rules]
-        self.regex = re.compile('|'.join(parts), flags=LEXER_REGEX_FLAGS)
+        self.regex = re.compile('|'.join(parts))
         self.pos: int = 0
         self.line: int = 1
         self.line_pos: int = 1
