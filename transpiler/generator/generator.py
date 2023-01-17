@@ -33,7 +33,8 @@ class Generator:
             # tokens with a space before and after
             case '<' | '>' | '<=' | '<=' | '==' | '!=' | \
                  '||' | '&&' | \
-                 '+' | '-' | '*' | '/' | '%' | '=':
+                 '+' | '-' | '*' | '/' | '%' | '=' | \
+                 '+=' | '-=' | '*=' | '/=' | '%=':
                 formatized_token = ' ' + token + ' '
             # all other tokens
         return formatized_token
