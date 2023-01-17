@@ -1,3 +1,5 @@
+import traceback
+
 from flask import Flask, render_template, request
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
@@ -53,6 +55,7 @@ def main():
         code = text_to_array(generator.compiler(app))
         exception = None
     except Exception as e:
+        print(str(traceback.format_exc()))
         exception = e
         code = None
 
