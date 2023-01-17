@@ -45,11 +45,11 @@ class SyntaxerExceptionsTestCase(unittest.TestCase):
             {
                 public static void main(String[] args) {
                     int a = 5; int b = 6;
-                    if (5 == 5) {
+                    if (5 != 5) {
                         a += b;
                     } else {
                         return b;
-                    }          
+                    }
                     return a;
                 }
             }
@@ -62,7 +62,7 @@ class SyntaxerExceptionsTestCase(unittest.TestCase):
                     int a = 5;
                     if (a == 5) {
                         System.out.println(a);
-                    }    
+                    }
                     int b = 6;
                 }
             }
@@ -74,7 +74,7 @@ class SyntaxerExceptionsTestCase(unittest.TestCase):
                 public static void main(String[] args) {
                     boolean a = true;
                     boolean b = false;
-                    System.out.println(a && b || a);
+                    System.out.println(a && b);
                 }
             }
         """)
@@ -109,7 +109,7 @@ class SyntaxerExceptionsTestCase(unittest.TestCase):
                 public static void main(String[] args) {
                    int a;
                 }
-                
+
                 public static int plus(int a, int b) {
                     return a + b;
                 }
