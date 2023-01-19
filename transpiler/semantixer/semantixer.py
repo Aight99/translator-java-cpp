@@ -265,15 +265,21 @@ class FunctionAnalyzer:
                                 var_id = tree[0, 0]
                             tree_parts_num += 1
                         var_type = self.__get_id_type(var_id)
+
+                        if var_type == Type.NONE:
+                            raise SemanticError(var_id.line, ErrorMessage.var_no_decl(var_id))
+
                         if tree_parts_num == 3:
                             assign = subtree[1]
-                            if var_type == Type.NONE:
-                                raise SemanticError(var_id.line, ErrorMessage.var_no_decl(var_id))
                             if assign.label() != Label.ASSIGN:
+                                if not self.__get_var(var_id).is_initialized:
+                                    raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
                                 if var_type == Type.BOOLEAN:
                                     raise SemanticError(var_id.line, ErrorMessage.boolean_op_assign())
                             expr = subtree[2, 0]
                             self.__check_expr(var_type, expr, var_id.line)
+
+                        # Случай инкремента и декремента
                         else:
                             if var_type == Type.BOOLEAN:
                                 raise SemanticError(var_id.line, ErrorMessage.boolean_increment())
@@ -416,7 +422,10 @@ class FunctionAnalyzer:
                 if needed_type < Type.CHAR:
                     raise SemanticError(line, ErrorMessage.types_not_fit(Type.CHAR.name, needed_type.name))
             case Label.ID:
-                return_type = self.__get_id_type(expr[0, 0])
+                var_id = expr[0, 0]
+                return_type = self.__get_id_type(var_id)
+                if not self.__get_var(var_id).is_initialized:
+                    raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
                 if needed_type < return_type:
                     raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
             case Label.FUNC_CALL:
@@ -442,7 +451,8 @@ class FunctionAnalyzer:
         else:
             func_token = tree[0, 0, 0]
             func_id = func_token.value
-            functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(param_expressions)]
+            functions = [func for func in self.func_list if
+                         func.id == func_id and len(func.params) == len(param_expressions)]
             if not functions:
                 raise SemanticError(func_token.line, ErrorMessage.func_no_decl(func_id))
             for param, expr in zip(functions[0].params, param_expressions):
