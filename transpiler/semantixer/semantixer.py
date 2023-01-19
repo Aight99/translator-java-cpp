@@ -441,6 +441,23 @@ class FunctionAnalyzer:
                 if needed_type < return_type:
                     raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
 
+    def __get_expr_type(self, expr):
+        match expr.label():
+            case Label.LOGICAL_EXPR:
+                return Type.BOOLEAN
+            case Label.MATH_EXPR:
+                return self.__get_math_expr_type(expr)
+            case Label.CHAR:
+                return Type.CHAR
+            case Label.ID:
+                var_id = expr[0, 0]
+                if not self.__get_var(var_id).is_initialized:
+                    raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
+                return self.__get_id_type(var_id)
+            case Label.FUNC_CALL:
+                self.__check_func_call(expr)
+                return self.__get_func_type(expr)
+
     def __check_func_call(self, tree):
         param_expressions = self.__get_func_call_params_expressions(tree)
         func_label = tree[0].label()
@@ -450,11 +467,17 @@ class FunctionAnalyzer:
             if func_label == Label.PRINT:
                 if len(param_expressions) != 1:
                     raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
-                # проверка параметров
+                expr = param_expressions[0]
+                self.__get_expr_type(expr)
             else:
                 if len(param_expressions) != 2:
                     raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
-                # проверка параметров
+                expr1 = param_expressions[0]
+                expr2 = param_expressions[1]
+                expr1_type = self.__get_expr_type(expr1)
+                expr2_type = self.__get_expr_type(expr2)
+                if expr1_type == Type.BOOLEAN or expr2_type == Type.BOOLEAN:
+                    raise SemanticError(func_token.line, ErrorMessage.types_not_fit(Type.BOOLEAN.name, 'NUMBER'))
         else:
             func_token = tree[0, 0, 0]
             func_id = func_token.value
