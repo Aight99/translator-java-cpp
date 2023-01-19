@@ -1,6 +1,7 @@
 from enum import Enum, IntEnum
 from nltk.tree import Tree
 
+from transpiler.base import Token
 from transpiler.constants import KEYWORDS, Label
 
 
@@ -239,14 +240,22 @@ class FunctionAnalyzer:
                 raise SemanticError(func.tree[0, 0].line, ErrorMessage.return_not_exists(func.id))
         return result
 
+    def __find_token(self, tree: Tree):
+        for subtree in tree:
+            if type(subtree) == Token:
+                return subtree
+            else:
+                return self.__find_token(subtree)
+
     def __is_correct_code(self, tree: Tree):
         result = True
         for subtree in tree:
             if type(subtree) == Tree:
                 match subtree.label():
                     case Label.INSTRUCTION:
+                        var_token = self.__find_token(subtree)
                         if self.returns_dict[self.current_scope]:
-                            raise SemanticError(subtree[0, 0, 0].line, ErrorMessage.unreachable_code())
+                            raise SemanticError(var_token.line, ErrorMessage.unreachable_code())
 
                     case Label.ASSIGNMENT:
                         tree_parts_num = 0
