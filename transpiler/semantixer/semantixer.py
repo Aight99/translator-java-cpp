@@ -1,7 +1,7 @@
 from enum import Enum, IntEnum
 from nltk.tree import Tree
 
-from transpiler.constants import KEYWORDS, Label, FUNCTIONS
+from transpiler.constants import KEYWORDS, Label
 
 
 class ErrorMessage(Enum):
@@ -56,6 +56,10 @@ class ErrorMessage(Enum):
     @staticmethod
     def func_no_decl(func_id):
         return f'function {func_id} is not declared'
+
+    @staticmethod
+    def func_params_mismatch(func_id):
+        return f'parameters do not match the function {func_id}'
 
 
 class SemanticError(Exception):
@@ -222,6 +226,7 @@ class FunctionAnalyzer:
         self.func_list = func_list
         self.vars_dict = {}
         self.returns_dict = {}
+        self.is_for_loop = False
 
     def is_correct(self, func: Function):
         self.vars_dict[self.current_scope] = func.params
@@ -295,10 +300,19 @@ class FunctionAnalyzer:
                         expr = subtree[1, 0]
                         self.__check_expr(func_type, expr, subtree[0, 0].line)
 
-                    case Label.LBRACKET_CURLY:
+                    case Label.FOR:
                         self.current_scope += 1
                         self.vars_dict[self.current_scope] = []
                         self.returns_dict[self.current_scope] = False
+                        self.is_for_loop = True
+
+                    case Label.LBRACKET_CURLY:
+                        if self.is_for_loop:
+                            self.is_for_loop = False
+                        else:
+                            self.current_scope += 1
+                            self.vars_dict[self.current_scope] = []
+                            self.returns_dict[self.current_scope] = False
 
                     case Label.RBRACKET_CURLY:
                         self.vars_dict.pop(self.current_scope, None)
@@ -402,11 +416,24 @@ class FunctionAnalyzer:
                     raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
 
     def __check_func_call(self, tree):
-        func_id = tree[0, 0, 0].value
-        expressions = self.__get_func_call_params_expressions(tree)
-
-        functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(expressions)]
-        if functions == [] and func_id not in FUNCTIONS:
-            raise SemanticError(tree[0, 0, 0].line, ErrorMessage.func_no_decl(func_id))
-        for param, expr in zip(functions[0].params, expressions):
-            self.__check_expr(param.type, expr, tree[0, 0, 0].line)
+        param_expressions = self.__get_func_call_params_expressions(tree)
+        func_label = tree[0].label()
+        if func_label in [Label.PRINT, Label.MAX, Label.MIN]:
+            func_token = tree[0, 0]
+            func_id = func_token.value
+            if func_label == Label.PRINT:
+                if len(param_expressions) != 1:
+                    raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
+                # проверка параметров
+            else:
+                if len(param_expressions) != 2:
+                    raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
+                # проверка параметров
+        else:
+            func_token = tree[0, 0, 0]
+            func_id = func_token.value
+            functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(param_expressions)]
+            if functions == []:
+                raise SemanticError(func_token.line, ErrorMessage.func_no_decl(func_id))
+            for param, expr in zip(functions[0].params, param_expressions):
+                self.__check_expr(param.type, expr, func_token.line)
