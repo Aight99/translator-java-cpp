@@ -176,8 +176,13 @@ class Function:
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return self.id == other.id \
-            and len(self.params) == len(other.params)
+        is_params_match = False
+        if len(self.params) == len(other.params):
+            is_params_match = True
+            for param1, param2 in zip(self.params, other.params):
+                if param1.type != param2.type:
+                    is_params_match = False
+        return self.id == other.id and is_params_match
 
     def __str__(self):
         return f'Function: {self.id}\nType: {self.type}\nParameters: {self.params}\n'
