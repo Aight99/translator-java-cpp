@@ -239,7 +239,9 @@ class FunctionAnalyzer:
         self.returns_dict[self.current_scope] = False
         self.func = func
 
-        result = self.__is_correct_code(func.code)
+        result = True
+        if func.code is not None:
+            result = self.__is_correct_code(func.code)
         if func.type != Type.NONE:
             if not self.returns_dict[0]:
                 raise SemanticError(func.tree[0, 0].line, ErrorMessage.return_not_exists(func.id))
