@@ -326,9 +326,10 @@ class FunctionAnalyzer:
         var = Variable(var_id, var_type)
         var.is_initialized = is_initialized
         is_var_exists = False
-        for var_exists in self.vars_dict[self.current_scope]:
-            if var_exists == var:
-                is_var_exists = True
+        for scope in range(self.current_scope + 1):
+            for var_exists in self.vars_dict[scope]:
+                if var_exists == var:
+                    is_var_exists = True
         if is_var_exists:
             raise SemanticError(var_id.line, ErrorMessage.var_multiple_decl(var.id))
         self.vars_dict[self.current_scope].append(var)
@@ -433,7 +434,7 @@ class FunctionAnalyzer:
             func_token = tree[0, 0, 0]
             func_id = func_token.value
             functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(param_expressions)]
-            if functions == []:
+            if not functions:
                 raise SemanticError(func_token.line, ErrorMessage.func_no_decl(func_id))
             for param, expr in zip(functions[0].params, param_expressions):
                 self.__check_expr(param.type, expr, func_token.line)
