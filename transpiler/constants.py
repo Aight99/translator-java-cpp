@@ -100,7 +100,6 @@ LEXER_RULES = [
 
 VARIABLE_TYPES = ['int', 'byte', 'short', 'long', 'float', 'char', 'boolean', 'double', 'String']
 LETTERS = list(string.ascii_letters) + ['_']
-FUNCTIONS = ['System.out.println', 'Math.max', 'Math.min']
 KEYWORDS = VARIABLE_TYPES + 'class do else for if public return static while'.split(' ')
 
 
@@ -119,6 +118,7 @@ class Label(Symbol):
     FUNC_CALL_PARAMS = '<func_call_params>'
     LBRACKET_CURLY = '<lbracket_curly>'
     RBRACKET_CURLY = '<rbracket_curly>'
+    FOR = '<for>'
     ASSIGN = '<assign>'
     INSTRUCTION = '<instruction>'
 
@@ -128,6 +128,10 @@ class Label(Symbol):
     NUMBER = '<number>'
     NUMBER_INT = '<number_int>'
     NUMBER_FLOAT = '<number_float>'
+
+    PRINT = '<print>'
+    MAX = '<max>'
+    MIN = '<min>'
 
     # Виды инструкций
     ASSIGNMENT = '<assignment>'
