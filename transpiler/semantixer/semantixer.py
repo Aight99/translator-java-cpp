@@ -421,10 +421,11 @@ class FunctionAnalyzer:
             func_token = tree[0, 0]
             func_id = func_token.value
             if func_label == Label.PRINT:
-                if len(param_expressions) != 1:
+                if len(param_expressions) > 1:
                     raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
-                expr = param_expressions[0]
-                self.__get_expr_type(expr)
+                if len(param_expressions) == 1:
+                    expr = param_expressions[0]
+                    self.__get_expr_type(expr)
                 return Type.NONE
             else:
                 if len(param_expressions) != 2:
