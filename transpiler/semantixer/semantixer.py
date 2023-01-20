@@ -78,24 +78,6 @@ class SemanticError(Exception):
         return f'{self.message} {self.line}: {self.description}'
 
 
-def is_correct_name(name):
-    if type(name) != str:
-        name = name.value
-    if name in KEYWORDS:
-        return False
-    return True
-
-
-def get_tree(tree: Tree, margin=0):
-    result = ''
-    for subtree in tree:
-        if type(subtree) == Tree:
-            result += f'{"|  " * margin} {subtree.label()}\n{get_tree(subtree, margin + 1)}'
-        else:
-            result += f'{"|  " * margin} {subtree}\n'
-    return result
-
-
 class SemanticAnalyzer:
     def __init__(self):
         self.func_list = []
@@ -189,7 +171,7 @@ class Function:
         return self.id == other.id and is_params_match
 
     def __str__(self):
-        return f'Function: {self.id}\nType: {self.type}\nParameters: {self.params}\n'
+        return f'Function: {self.id}\nType: {self.type.name}\nParameters: {self.params}\n'
 
 
 class Variable:
@@ -211,22 +193,6 @@ class Variable:
         return f'Variable: {self.id.value}\nType: {self.type.value}\nInitialized: {self.is_initialized}'
 
 
-def get_type(java_type):
-    match java_type:
-        case 'boolean':
-            return Type.BOOLEAN
-        case 'char':
-            return Type.CHAR
-        case 'int':
-            return Type.INT
-        case 'float':
-            return Type.FLOAT
-        case 'double':
-            return Type.DOUBLE
-        case _:
-            return Type.NONE
-
-
 class FunctionAnalyzer:
     def __init__(self, func_list):
         # 0 for global scope variables
@@ -239,7 +205,7 @@ class FunctionAnalyzer:
         self.is_for_loop = False
 
     def is_correct(self, func: Function):
-        self.vars_dict[self.current_scope] = func.params
+        self.vars_dict[self.current_scope] = func.params[:]
         self.returns_dict[self.current_scope] = False
         self.func = func
 
@@ -370,13 +336,16 @@ class FunctionAnalyzer:
             match label_tree.label():
                 case Label.NUMBER:
                     type_tree = label_tree[0]
-                    if type_tree.label() == Label.NUMBER_INT:
-                        value = int(type_tree[0].value)
-                        if 0 <= value <= 65535:
-                            return Type.CHAR
-                        return Type.INT
-                    else:
-                        return Type.DOUBLE
+                    match type_tree.label():
+                        case Label.NUMBER_INT:
+                            value = int(type_tree[0].value)
+                            if 0 <= value <= 65535:
+                                return Type.CHAR
+                            return Type.INT
+                        case Label.NUMBER_FLOAT:
+                            return Type.DOUBLE
+                        case Label.NUMBER_DOUBLE:
+                            return Type.DOUBLE
                 case Label.FUNC_CALL:
                     return self.__get_func_type(label_tree)
                 case Label.CHAR:
@@ -511,3 +480,37 @@ class FunctionAnalyzer:
                 return self.__get_id_type(var_id)
             case Label.FUNC_CALL:
                 return self.__get_func_type(expr)
+
+
+def get_type(java_type):
+    match java_type:
+        case 'boolean':
+            return Type.BOOLEAN
+        case 'char':
+            return Type.CHAR
+        case 'int':
+            return Type.INT
+        case 'float':
+            return Type.FLOAT
+        case 'double':
+            return Type.DOUBLE
+        case _:
+            return Type.NONE
+
+
+def is_correct_name(name):
+    if type(name) != str:
+        name = name.value
+    if name in KEYWORDS:
+        return False
+    return True
+
+
+def get_tree(tree: Tree, margin=0):
+    result = ''
+    for subtree in tree:
+        if type(subtree) == Tree:
+            result += f'{"|  " * margin} {subtree.label()}\n{get_tree(subtree, margin + 1)}'
+        else:
+            result += f'{"|  " * margin} {subtree}\n'
+    return result

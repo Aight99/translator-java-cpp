@@ -128,6 +128,7 @@ class Label(Symbol):
     NUMBER = '<number>'
     NUMBER_INT = '<number_int>'
     NUMBER_FLOAT = '<number_float>'
+    NUMBER_DOUBLE = '<number_double>'
 
     PRINT = '<print>'
     MAX = '<max>'
