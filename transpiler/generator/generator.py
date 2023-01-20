@@ -49,7 +49,11 @@ class Generator:
     def __get_func_return_type(self, func_tree: nltk.Tree):
         for subtree in func_tree.subtrees():
             if subtree.label() == '<func_return_type>':
-                return str(subtree.leaves()[0])
+                type = str(subtree.leaves()[0])
+                if type == "boolean":
+                    return "bool"
+                else:
+                    return str(subtree.leaves()[0])
 
     def __get_func_id(self, func_tree: nltk.Tree):
         for subtree in func_tree.subtrees():
@@ -157,11 +161,14 @@ class Generator:
 
     def generate_code(self, tree: nltk.Tree):
         self.code += '#include <iostream>\n\n'
+        subtree_main = None
         for subtree in tree:
             if subtree.label() == '<func_declaration>':
                 for func_subtree in subtree.subtrees():
                     if func_subtree.label() == '<func_declaration>':
                         self.code += self.__generate_function(func_subtree) + '\n'
             elif subtree.label() == '<main_func>':
-                self.code += self.__generate_main(subtree)
+                subtree_main = subtree
+        if subtree_main is not None:
+            self.code += self.__generate_main(subtree_main)
         return self.code

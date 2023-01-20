@@ -409,5 +409,154 @@ void main(int argc, char *argv[])
 }
 """)
 
+    def test_all_inclusive(self):
+        self.check_generator("""
+public class Main
+{
+        public static void printHello() {
+            System.out.println(123);
+        }
+            
+        public static int plus(int a, int b) {
+            return a + b;
+        }
+            
+        public static boolean isLegit() {
+            boolean a = true;
+            boolean b = true;
+            boolean c = false;
+            boolean d = true;
+            boolean result = (!a && b) && !(c || d);
+            return result;
+        }
+            
+        public static void main(String[] args) {
+            printHello();
+            if (true) {
+                System.out.println(123);
+                doRecursion(5);
+            }
+            while (true) {
+                char c = 'a';
+                for (float i = doMath(4, 3, 1, true); i < doMath(4, 3, 1, false); ++i) {
+                    float j = i;
+                    while (j < i + 6) {
+                        j++;
+                        System.out.println(c);
+                        c += 1;
+                    }
+                }
+            }
+            char c = '$';
+            System.out.println(c);
+            
+            if (10 <= 11) {
+                System.out.println(1);
+            } else {
+                System.out.println(0);
+            }
+        }
+            
+        public static float doMath(int a, int b, int c, boolean d) {
+            if (5 == 5) {
+                return Math.min(a, b) / c;
+            } else {
+                c *= 2;
+                c /= 2;
+                c %= 10000000;
+            }
+            return c * Math.max(b, a);
+        }
+            
+        public static int doRecursion(int a) {
+            if (a > 0) {
+                printHello();
+                doRecursion(a - 1);
+            }
+            return 0;
+        }
+}
+""", """#include <iostream>
+
+void printHello()
+{
+    std::cout << 123 << "\\n";
+}
+
+int plus(int a, int b)
+{
+    return a + b;
+}
+
+bool isLegit()
+{
+    bool a = true;
+    bool b = true;
+    bool c = false;
+    bool d = true;
+    bool result = (!a && b) && !(c || d);
+    return result;
+}
+
+float doMath(int a, int b, int c, bool d)
+{
+    if (5 == 5)
+    {
+        return std::min(a, b) / c;
+    }
+    else
+    {
+        c *= 2;
+        c /= 2;
+        c %= 10000000;
+    }
+    return c * std::max(b, a);
+}
+
+int doRecursion(int a)
+{
+    if (a > 0)
+    {
+        printHello();
+        doRecursion(a - 1);
+    }
+    return 0;
+}
+
+void main(int argc, char *argv[])
+{
+    printHello();
+    if (true)
+    {
+        std::cout << 123 << "\\n";
+        doRecursion(5);
+    }
+    while (true)
+    {
+        char c = 'a';
+        for (float i = doMath(4, 3, 1, true); i < doMath(4, 3, 1, false); ++i)
+        {
+            float j = i;
+            while (j < i + 6)
+            {
+                j++;
+                std::cout << c << "\\n";
+                c += 1;
+            }
+        }
+    }
+    char c = '$';
+    std::cout << c << "\\n";
+    if (10 <= 11)
+    {
+        std::cout << 1 << "\\n";
+    }
+    else
+    {
+        std::cout << 0 << "\\n";
+    }
+}
+""")
+
 if __name__ == '__main__':
     unittest.main()
