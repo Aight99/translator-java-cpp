@@ -1,7 +1,8 @@
 from enum import Enum, IntEnum
 from nltk.tree import Tree
 
-from transpiler.constants import KEYWORDS, Label, FUNCTIONS
+from transpiler.base import Token
+from transpiler.constants import KEYWORDS, Label
 
 
 class ErrorMessage(Enum):
@@ -56,6 +57,14 @@ class ErrorMessage(Enum):
     @staticmethod
     def func_no_decl(func_id):
         return f'function {func_id} is not declared'
+
+    @staticmethod
+    def func_params_mismatch(func_id):
+        return f'parameters do not match the function {func_id}'
+
+    @staticmethod
+    def func_ambiguous(func_id):
+        return f'reference to function {func_id} is ambiguous'
 
 
 class SemanticError(Exception):
@@ -171,8 +180,13 @@ class Function:
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return self.id == other.id \
-            and len(self.params) == len(other.params)
+        is_params_match = False
+        if len(self.params) == len(other.params):
+            is_params_match = True
+            for param1, param2 in zip(self.params, other.params):
+                if param1.type != param2.type:
+                    is_params_match = False
+        return self.id == other.id and is_params_match
 
     def __str__(self):
         return f'Function: {self.id}\nType: {self.type}\nParameters: {self.params}\n'
@@ -197,8 +211,8 @@ class Variable:
         return f'Variable: {self.id.value}\nType: {self.type.value}\nInitialized: {self.is_initialized}'
 
 
-def get_type(type):
-    match type:
+def get_type(java_type):
+    match java_type:
         case 'boolean':
             return Type.BOOLEAN
         case 'char':
@@ -222,17 +236,27 @@ class FunctionAnalyzer:
         self.func_list = func_list
         self.vars_dict = {}
         self.returns_dict = {}
+        self.is_for_loop = False
 
     def is_correct(self, func: Function):
         self.vars_dict[self.current_scope] = func.params
         self.returns_dict[self.current_scope] = False
         self.func = func
 
-        result = self.__is_correct_code(func.code)
+        result = True
+        if func.code is not None:
+            result = self.__is_correct_code(func.code)
         if func.type != Type.NONE:
             if not self.returns_dict[0]:
                 raise SemanticError(func.tree[0, 0].line, ErrorMessage.return_not_exists(func.id))
         return result
+
+    def __find_token(self, tree: Tree):
+        for subtree in tree:
+            if type(subtree) == Token:
+                return subtree
+            else:
+                return self.__find_token(subtree)
 
     def __is_correct_code(self, tree: Tree):
         result = True
@@ -240,8 +264,9 @@ class FunctionAnalyzer:
             if type(subtree) == Tree:
                 match subtree.label():
                     case Label.INSTRUCTION:
+                        var_token = self.__find_token(subtree)
                         if self.returns_dict[self.current_scope]:
-                            raise SemanticError(subtree[0, 0, 0].line, ErrorMessage.unreachable_code())
+                            raise SemanticError(var_token.line, ErrorMessage.unreachable_code())
 
                     case Label.ASSIGNMENT:
                         tree_parts_num = 0
@@ -251,15 +276,21 @@ class FunctionAnalyzer:
                                 var_id = tree[0, 0]
                             tree_parts_num += 1
                         var_type = self.__get_id_type(var_id)
+
+                        if var_type == Type.NONE:
+                            raise SemanticError(var_id.line, ErrorMessage.var_no_decl(var_id))
+
                         if tree_parts_num == 3:
                             assign = subtree[1]
-                            if var_type == Type.NONE:
-                                raise SemanticError(var_id.line, ErrorMessage.var_no_decl(var_id))
                             if assign.label() != Label.ASSIGN:
+                                if not self.__get_var(var_id).is_initialized:
+                                    raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
                                 if var_type == Type.BOOLEAN:
                                     raise SemanticError(var_id.line, ErrorMessage.boolean_op_assign())
                             expr = subtree[2, 0]
                             self.__check_expr(var_type, expr, var_id.line)
+
+                        # Случай инкремента и декремента
                         else:
                             if var_type == Type.BOOLEAN:
                                 raise SemanticError(var_id.line, ErrorMessage.boolean_increment())
@@ -285,7 +316,7 @@ class FunctionAnalyzer:
                         #         print(var)
 
                     case Label.FUNC_CALL:
-                        self.__check_func_call(subtree)
+                        self.__get_func_type(subtree)
 
                     case Label.FUNC_RETURN:
                         func_type = self.func.type
@@ -295,10 +326,19 @@ class FunctionAnalyzer:
                         expr = subtree[1, 0]
                         self.__check_expr(func_type, expr, subtree[0, 0].line)
 
-                    case Label.LBRACKET_CURLY:
+                    case Label.FOR:
                         self.current_scope += 1
                         self.vars_dict[self.current_scope] = []
                         self.returns_dict[self.current_scope] = False
+                        self.is_for_loop = True
+
+                    case Label.LBRACKET_CURLY:
+                        if self.is_for_loop:
+                            self.is_for_loop = False
+                        else:
+                            self.current_scope += 1
+                            self.vars_dict[self.current_scope] = []
+                            self.returns_dict[self.current_scope] = False
 
                     case Label.RBRACKET_CURLY:
                         self.vars_dict.pop(self.current_scope, None)
@@ -312,9 +352,10 @@ class FunctionAnalyzer:
         var = Variable(var_id, var_type)
         var.is_initialized = is_initialized
         is_var_exists = False
-        for var_exists in self.vars_dict[self.current_scope]:
-            if var_exists == var:
-                is_var_exists = True
+        for scope in range(self.current_scope + 1):
+            for var_exists in self.vars_dict[scope]:
+                if var_exists == var:
+                    is_var_exists = True
         if is_var_exists:
             raise SemanticError(var_id.line, ErrorMessage.var_multiple_decl(var.id))
         self.vars_dict[self.current_scope].append(var)
@@ -330,11 +371,13 @@ class FunctionAnalyzer:
                 case Label.NUMBER:
                     type_tree = label_tree[0]
                     if type_tree.label() == Label.NUMBER_INT:
+                        value = int(type_tree[0].value)
+                        if 0 <= value <= 65535:
+                            return Type.CHAR
                         return Type.INT
                     else:
                         return Type.DOUBLE
                 case Label.FUNC_CALL:
-                    self.__check_func_call(label_tree)
                     return self.__get_func_type(label_tree)
                 case Label.CHAR:
                     return Type.CHAR
@@ -374,10 +417,60 @@ class FunctionAnalyzer:
         return expressions
 
     def __get_func_type(self, tree):
-        func_id = tree[0, 0, 0].value
-        expressions = self.__get_func_call_params_expressions(tree)
-        functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(expressions)]
-        return functions[0].type
+        param_expressions = self.__get_func_call_params_expressions(tree)
+        func_label = tree[0].label()
+        if func_label in [Label.PRINT, Label.MAX, Label.MIN]:
+            func_token = tree[0, 0]
+            func_id = func_token.value
+            if func_label == Label.PRINT:
+                if len(param_expressions) > 1:
+                    raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
+                if len(param_expressions) == 1:
+                    expr = param_expressions[0]
+                    self.__get_expr_type(expr)
+                return Type.NONE
+            else:
+                if len(param_expressions) != 2:
+                    raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
+                expr1 = param_expressions[0]
+                expr2 = param_expressions[1]
+                expr1_type = self.__get_expr_type(expr1)
+                expr2_type = self.__get_expr_type(expr2)
+                if expr1_type == Type.BOOLEAN or expr2_type == Type.BOOLEAN:
+                    raise SemanticError(func_token.line, ErrorMessage.types_not_fit(Type.BOOLEAN.name, 'NUMBER'))
+                return max(expr1_type, expr2_type)
+        else:
+            func_token = tree[0, 0, 0]
+            func_id = func_token.value
+            functions = [func for func in self.func_list if
+                         func.id == func_id and len(func.params) == len(param_expressions)]
+            if not functions:
+                raise SemanticError(func_token.line, ErrorMessage.func_no_decl(func_id))
+
+            params_types = [self.__get_expr_type(expr) for expr in param_expressions]
+            priority_functions = {}
+            for func in functions:
+                priority = 0
+                for param, param_type in zip(func.params, params_types):
+                    if param.type >= param_type:
+                        priority -= param.type - param_type
+                    else:
+                        priority = 1
+                        break
+                if priority != 1:
+                    if priority not in priority_functions:
+                        priority_functions[priority] = []
+                    priority_functions[priority].append(func)
+
+            if not priority_functions:
+                raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
+
+            max_priority = max(priority_functions)
+
+            if len(priority_functions[max_priority]) > 1:
+                raise SemanticError(func_token.line, ErrorMessage.func_ambiguous(func_id))
+
+            return priority_functions[max_priority][0].type
 
     def __check_expr(self, needed_type, expr, line):
         match expr.label():
@@ -392,21 +485,29 @@ class FunctionAnalyzer:
                 if needed_type < Type.CHAR:
                     raise SemanticError(line, ErrorMessage.types_not_fit(Type.CHAR.name, needed_type.name))
             case Label.ID:
-                return_type = self.__get_id_type(expr[0, 0])
+                var_id = expr[0, 0]
+                return_type = self.__get_id_type(var_id)
+                if not self.__get_var(var_id).is_initialized:
+                    raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
                 if needed_type < return_type:
                     raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
             case Label.FUNC_CALL:
-                self.__check_func_call(expr)
                 return_type = self.__get_func_type(expr)
                 if needed_type < return_type:
                     raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
 
-    def __check_func_call(self, tree):
-        func_id = tree[0, 0, 0].value
-        expressions = self.__get_func_call_params_expressions(tree)
-
-        functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(expressions)]
-        if functions == [] and func_id not in FUNCTIONS:
-            raise SemanticError(tree[0, 0, 0].line, ErrorMessage.func_no_decl(func_id))
-        for param, expr in zip(functions[0].params, expressions):
-            self.__check_expr(param.type, expr, tree[0, 0, 0].line)
+    def __get_expr_type(self, expr):
+        match expr.label():
+            case Label.LOGICAL_EXPR:
+                return Type.BOOLEAN
+            case Label.MATH_EXPR:
+                return self.__get_math_expr_type(expr)
+            case Label.CHAR:
+                return Type.CHAR
+            case Label.ID:
+                var_id = expr[0, 0]
+                if not self.__get_var(var_id).is_initialized:
+                    raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
+                return self.__get_id_type(var_id)
+            case Label.FUNC_CALL:
+                return self.__get_func_type(expr)

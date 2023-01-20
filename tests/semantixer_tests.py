@@ -91,24 +91,6 @@ class SemantixerTestCase(unittest.TestCase):
             }
         """)
 
-        self.check_correct("""
-            public class Main
-            {
-                public static int plus(int a) {
-                    if (5 > 0) {
-                        return 5;
-                    }
-                    else {
-                        return 6;
-                    }
-                }
-
-                public static void main(String[] args) {
-                    int a = 1;
-                }
-            }
-        """)
-
         self.check_wrong("""
             public class Main
             {
@@ -179,6 +161,17 @@ class SemantixerTestCase(unittest.TestCase):
 
                 public static void main(String[] args) {
                     int a;
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    for (int i = 0; i < 5; i++) {
+                        System.out.println(i);
+                    } 
                 }
             }
         """)
@@ -323,6 +316,18 @@ class SemantixerTestCase(unittest.TestCase):
             public class Main
             {
                 public static void main(String[] args) {
+                    int i = 0;
+                    for (int i = 0; i < 5; i++) {
+                        System.out.println(i);
+                    } 
+                }
+            }
+        """, ErrorMessage.var_multiple_decl('i'))
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
                     int a;
                     if (5 > 0) {
                         int a = 5;
@@ -359,6 +364,31 @@ class SemantixerTestCase(unittest.TestCase):
             }
         """, ErrorMessage.var_multiple_decl('a'))
 
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    for (int i = 0; i < 5; i++) {
+                        int i = i;
+                    }
+                }
+            }
+        """, ErrorMessage.var_multiple_decl('i'))
+
+        self.check_correct("""
+        public class Main
+        {
+            public static void main(String[] args) {
+                if (5 == 5) {
+                    int a = 5;
+                }
+                if (6 == 6) {
+                    int a = 5;
+                }
+            }
+        }
+        """)
+
     def test_boolean_var_math_expr(self):
         self.check_wrong("""
             public class Main
@@ -377,6 +407,15 @@ class SemantixerTestCase(unittest.TestCase):
                 public static void main(String[] args) {
                     int b = 5;
                     char a = b;
+                }
+            }
+        """, ErrorMessage.types_not_fit(Type.INT.name, Type.CHAR.name))
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    char a = -5;
                 }
             }
         """, ErrorMessage.types_not_fit(Type.INT.name, Type.CHAR.name))
@@ -419,6 +458,19 @@ class SemantixerTestCase(unittest.TestCase):
             }
         """, ErrorMessage.types_not_fit(Type.DOUBLE.name, Type.FLOAT.name))
 
+        self.check_wrong("""
+            public class Main
+            {
+                public static int plus(int a, double b) {
+                    return a + b;
+                }
+                
+                public static void main(String[] args) {
+                    plus(2, 2.0);
+                }
+            }
+        """, ErrorMessage.types_not_fit(Type.DOUBLE.name, Type.INT.name))
+
     def test_func_no_decl(self):
         self.check_wrong("""
             public class Main
@@ -441,6 +493,208 @@ class SemantixerTestCase(unittest.TestCase):
                 }
             }
         """, ErrorMessage.func_no_decl('plus'))
+
+    def test_func_params_mismatch(self):
+        self.check_wrong("""
+            public class Main
+            {
+                public static void plus(int a, boolean b) {
+                }
+                
+                public static void main(String[] args) {
+                    plus(5, 5);
+                }
+            }
+        """, ErrorMessage.func_params_mismatch('plus'))
+
+    def test_func_ambiguous(self):
+        self.check_wrong("""
+            public class Main
+            {
+                public static int plus(int a, double b) {
+                    return 5;
+                }
+                public static int plus(double a, int b) {
+                    return 6;
+                }
+                public static void main(String[] args) {
+                    System.out.println(plus('a', 'a'));
+                }
+            }
+        """, ErrorMessage.func_ambiguous('plus'))
+
+        self.check_correct("""
+            public class Main
+            {
+                public static int plus(int a, double b) {
+                    return 5;
+                }
+                public static int plus(double a, int b) {
+                    return 6;
+                }
+                public static void main(String[] args) {
+                    System.out.println(plus('a', 5.0));
+                }
+            }
+        """)
+
+    def test_inbuilt_func(self):
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    System.out.println('a', 5);
+                }
+            }
+        """, ErrorMessage.func_params_mismatch('System.out.println'))
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    Math.max(true, 5);
+                }
+            }
+        """, ErrorMessage.types_not_fit(Type.BOOLEAN.name, 'NUMBER'))
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    Math.min(1, 2, 3);
+                }
+            }
+        """, ErrorMessage.func_params_mismatch('Math.min'))
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    System.out.println();
+                    System.out.println('a');
+                    System.out.println(5);
+                    System.out.println(5.0);
+                    System.out.println(true);
+                    System.out.println('a' + 'a');
+                    System.out.println('a' == 'a');
+            
+                    char var_char;
+                    int var_int;
+                    double var_double;
+            
+                    var_char = Math.max('a', 'a');
+                    var_int = Math.max('a', 5);
+                    var_double = Math.max('a', 5.0);
+                    var_int = Math.max(5, 5);
+                    var_double = Math.max(5, 5.0);
+                    var_double = Math.max(5.0, 5.0);
+            
+                    var_char = Math.min('a', 'a');
+                    var_int = Math.min('a', 5);
+                    var_double = Math.min('a', 5.0);
+                    var_int = Math.min(5, 5);
+                    var_double = Math.min(5, 5.0);
+                    var_double = Math.min(5.0, 5.0);
+                }
+            }
+        """)
+
+    def test_correct_mega_test(self):
+        self.check_correct("""
+            public class Main
+            {
+                public static int plus(int a, int b) {
+                    return a + b;
+                }
+
+                public static void main(String[] args) {
+                    int a = 5;
+                    char b = 'a';
+                    double c = plus(a, b);
+                    main();
+                    
+                    for (int i = 0; i < 5; i++) {
+                        int d = 4;
+                    }
+                    
+                    for (int i = 0; i < 5; i++) {
+                        int d = 3;
+                    }
+                }
+                
+                public static void main() {
+                    System.out.println(1 + 2 + 3);
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void printHello() {
+                    System.out.println(123);
+                }
+            
+                public static int plus(int a, int b) {
+                    return a + b;
+                }
+            
+                public static boolean isLegit() {
+                    boolean a = true;
+                    boolean b = true;
+                    boolean c = false;
+                    boolean d = true;
+                    boolean result = (!a && b) && !(c || d);
+                    return result;
+                }
+            
+                public static void main(String[] args) {
+                    printHello();
+                    if (true) {
+                        System.out.println(123);
+                        doRecursion(5);
+                    }
+                    while (true) {
+                        char c = 'a';
+                        for (float i = doMath(4, 3, 1, true); i < doMath(4, 3, 1, false); ++i) {
+                            float j = i;
+                            while (j < i + 6) {
+                                j++;
+                                System.out.println(c);
+                                c += 1;
+                            }
+                        }
+                    }
+                    char c = '$';
+                    System.out.println(c);
+            
+                    if (10 <= 11) {
+                        System.out.println(1);
+                    } else {
+                        System.out.println(0);
+                    }
+                }
+            
+                public static float doMath(int a, int b, int c, boolean d) {
+                    if (5 == 5) {
+                        return Math.min(a, b) / c;
+                    } else {
+                        c *= 2;
+                        c /= 2;
+                        c %= 10000000;
+                    }
+                    return c * Math.max(b, a);
+                }
+            
+                public static int doRecursion(int a) {
+                    if (a > 0) {
+                        printHello();
+                        doRecursion(a - 1);
+                    }
+                    return 0;
+                }
+            }
+        """)
 
 
 if __name__ == '__main__':
