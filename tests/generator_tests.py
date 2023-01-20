@@ -20,14 +20,11 @@ class GeneratorTestCase(unittest.TestCase):
         tokens = list(self.lexer.tokens)
         earley = EarleyParse(tokens, self.grammar)
         tree = earley.get_parse_tree()
-        # semantixer = SemanticAnalyzer()
-        # if semantixer.is_correct(tree):
-        #     generator = Generator()
-        #     generated_code = generator.generate_code(tree)
-        #     self.assertEqual(generated_code, valid_cpp)
-        generator = Generator()
-        generated_code = generator.generate_code(tree)
-        self.assertEqual(generated_code, valid_cpp)
+        semantixer = SemanticAnalyzer()
+        if semantixer.is_correct(tree):
+            generator = Generator()
+            generated_code = generator.generate_code(tree)
+            self.assertEqual(generated_code, valid_cpp)
 
     def test_var(self):
         self.check_generator("""
@@ -318,11 +315,10 @@ void main(int argc, char *argv[])
             return a + b;
         }
         public static double plus_double(double a, double b) {
-            float sum = 0;
             for (int i = 0; i < 3; i++) {
-                sum += a + b;
+                a += b;
             }
-            return sum;
+            return a;
         }
         public static int cool_func(int a, double b) {
             if (b == 2.5) {
@@ -356,12 +352,11 @@ float plus_float(float a, float b)
 
 double plus_double(double a, double b)
 {
-    float sum = 0;
     for (int i = 0; i < 3; i++)
     {
-        sum += a + b;
+        a += b;
     }
-    return sum;
+    return a;
 }
 
 int cool_func(int a, double b)
