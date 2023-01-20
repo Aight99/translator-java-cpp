@@ -415,7 +415,7 @@ class SemantixerTestCase(unittest.TestCase):
             public class Main
             {
                 public static void main(String[] args) {
-                    char a = -5;
+                    char a = 65536;
                 }
             }
         """, ErrorMessage.types_not_fit(Type.INT.name, Type.CHAR.name))
