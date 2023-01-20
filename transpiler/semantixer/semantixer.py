@@ -62,6 +62,10 @@ class ErrorMessage(Enum):
     def func_params_mismatch(func_id):
         return f'parameters do not match the function {func_id}'
 
+    @staticmethod
+    def func_ambiguous(func_id):
+        return f'reference to function {func_id} is ambiguous'
+
 
 class SemanticError(Exception):
     def __init__(self, line, description, message="semantic error in string "):
@@ -312,7 +316,7 @@ class FunctionAnalyzer:
                         #         print(var)
 
                     case Label.FUNC_CALL:
-                        self.__check_func_call(subtree)
+                        self.__get_func_type(subtree)
 
                     case Label.FUNC_RETURN:
                         func_type = self.func.type
@@ -411,10 +415,59 @@ class FunctionAnalyzer:
         return expressions
 
     def __get_func_type(self, tree):
-        func_id = tree[0, 0, 0].value
-        expressions = self.__get_func_call_params_expressions(tree)
-        functions = [func for func in self.func_list if func.id == func_id and len(func.params) == len(expressions)]
-        return functions[0].type
+        param_expressions = self.__get_func_call_params_expressions(tree)
+        func_label = tree[0].label()
+        if func_label in [Label.PRINT, Label.MAX, Label.MIN]:
+            func_token = tree[0, 0]
+            func_id = func_token.value
+            if func_label == Label.PRINT:
+                if len(param_expressions) != 1:
+                    raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
+                expr = param_expressions[0]
+                self.__get_expr_type(expr)
+                return Type.NONE
+            else:
+                if len(param_expressions) != 2:
+                    raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
+                expr1 = param_expressions[0]
+                expr2 = param_expressions[1]
+                expr1_type = self.__get_expr_type(expr1)
+                expr2_type = self.__get_expr_type(expr2)
+                if expr1_type == Type.BOOLEAN or expr2_type == Type.BOOLEAN:
+                    raise SemanticError(func_token.line, ErrorMessage.types_not_fit(Type.BOOLEAN.name, 'NUMBER'))
+                return max(expr1_type, expr2_type)
+        else:
+            func_token = tree[0, 0, 0]
+            func_id = func_token.value
+            functions = [func for func in self.func_list if
+                         func.id == func_id and len(func.params) == len(param_expressions)]
+            if not functions:
+                raise SemanticError(func_token.line, ErrorMessage.func_no_decl(func_id))
+
+            params_types = [self.__get_expr_type(expr) for expr in param_expressions]
+            priority_functions = {}
+            for func in functions:
+                priority = 0
+                for param, param_type in zip(func.params, params_types):
+                    if param.type >= param_type:
+                        priority -= param.type - param_type
+                    else:
+                        priority = 1
+                        break
+                if priority != 1:
+                    if priority not in priority_functions:
+                        priority_functions[priority] = []
+                    priority_functions[priority].append(func)
+
+            if not priority_functions:
+                raise SemanticError(func_token.line, ErrorMessage.func_no_decl(func_id))
+
+            max_priority = max(priority_functions)
+
+            if len(priority_functions[max_priority]) > 1:
+                raise SemanticError(func_token.line, ErrorMessage.func_ambiguous(func_id))
+
+            return priority_functions[max_priority][0].type
 
     def __check_expr(self, needed_type, expr, line):
         match expr.label():
@@ -436,7 +489,6 @@ class FunctionAnalyzer:
                 if needed_type < return_type:
                     raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
             case Label.FUNC_CALL:
-                self.__check_func_call(expr)
                 return_type = self.__get_func_type(expr)
                 if needed_type < return_type:
                     raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
@@ -455,35 +507,5 @@ class FunctionAnalyzer:
                     raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
                 return self.__get_id_type(var_id)
             case Label.FUNC_CALL:
-                self.__check_func_call(expr)
                 return self.__get_func_type(expr)
 
-    def __check_func_call(self, tree):
-        param_expressions = self.__get_func_call_params_expressions(tree)
-        func_label = tree[0].label()
-        if func_label in [Label.PRINT, Label.MAX, Label.MIN]:
-            func_token = tree[0, 0]
-            func_id = func_token.value
-            if func_label == Label.PRINT:
-                if len(param_expressions) != 1:
-                    raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
-                expr = param_expressions[0]
-                self.__get_expr_type(expr)
-            else:
-                if len(param_expressions) != 2:
-                    raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
-                expr1 = param_expressions[0]
-                expr2 = param_expressions[1]
-                expr1_type = self.__get_expr_type(expr1)
-                expr2_type = self.__get_expr_type(expr2)
-                if expr1_type == Type.BOOLEAN or expr2_type == Type.BOOLEAN:
-                    raise SemanticError(func_token.line, ErrorMessage.types_not_fit(Type.BOOLEAN.name, 'NUMBER'))
-        else:
-            func_token = tree[0, 0, 0]
-            func_id = func_token.value
-            functions = [func for func in self.func_list if
-                         func.id == func_id and len(func.params) == len(param_expressions)]
-            if not functions:
-                raise SemanticError(func_token.line, ErrorMessage.func_no_decl(func_id))
-            for param, expr in zip(functions[0].params, param_expressions):
-                self.__check_expr(param.type, expr, func_token.line)
