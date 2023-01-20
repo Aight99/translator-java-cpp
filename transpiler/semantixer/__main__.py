@@ -8,7 +8,7 @@ def main():
     filepath = '../../example/grammar.txt'
     grammar = Grammar.load_grammar(filepath)
 
-    with open('../../example/semantic.txt') as f:
+    with open('../../example/semantixer_test.txt') as f:
         document = f.read()
     lexer = Lexer(Tag, LEXER_RULES, filepath)
     lexer.buffer = document
