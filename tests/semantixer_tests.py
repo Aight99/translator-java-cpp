@@ -415,7 +415,7 @@ class SemantixerTestCase(unittest.TestCase):
             public class Main
             {
                 public static void main(String[] args) {
-                    char a = -5;
+                    char a = 65600;
                 }
             }
         """, ErrorMessage.types_not_fit(Type.INT.name, Type.CHAR.name))
@@ -632,7 +632,10 @@ class SemantixerTestCase(unittest.TestCase):
             public class Main
             {
                 public static void printHello() {
-                    System.out.println(123);
+                    System.out.println('h');
+                    System.out.println('e');
+                    System.out.println('l');
+                    System.out.println('o');
                 }
             
                 public static int plus(int a, int b) {
@@ -651,12 +654,12 @@ class SemantixerTestCase(unittest.TestCase):
                 public static void main(String[] args) {
                     printHello();
                     if (true) {
-                        System.out.println(123);
+                        System.out.println('#');
                         doRecursion(5);
                     }
-                    while (true) {
+                    {
                         char c = 'a';
-                        for (float i = doMath(4, 3, 1, true); i < doMath(4, 3, 1, false); ++i) {
+                        for (float i = doMath(4, 3, 5, true); i < doMath(4, 3, 5, false); ++i) {
                             float j = i;
                             while (j < i + 6) {
                                 j++;
@@ -668,7 +671,7 @@ class SemantixerTestCase(unittest.TestCase):
                     char c = '$';
                     System.out.println(c);
             
-                    if (10 <= 11) {
+                    if (isLegit() || 10 <= 11 && 5 >= 14 || 10 == 10 && 10 != 10) {
                         System.out.println(1);
                     } else {
                         System.out.println(0);
@@ -676,13 +679,12 @@ class SemantixerTestCase(unittest.TestCase):
                 }
             
                 public static float doMath(int a, int b, int c, boolean d) {
-                    if (5 == 5) {
+                    if (d) {
                         return Math.min(a, b) / c;
-                    } else {
-                        c *= 2;
-                        c /= 2;
-                        c %= 10000000;
                     }
+                    c *= 2;
+                    c /= 2;
+                    c %= 10000000;
                     return c * Math.max(b, a);
                 }
             

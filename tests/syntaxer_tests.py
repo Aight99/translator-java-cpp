@@ -124,6 +124,30 @@ class SyntaxerExceptionsTestCase(unittest.TestCase):
             }
         """)
 
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    if (isLegit() || 10 <= 11 && 5 >= 14 && isLegit() || 10 == 10 && 10 != 10) {
+                        System.out.println(1);
+                    } else {
+                        System.out.println(0);
+                    }
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    if (a) {
+                        System.out.println(1);
+                    }
+                }
+            }
+        """)
+
     def test_user_functions_declaration(self):
         # Несколько функций
         self.check_correct("""
@@ -171,6 +195,29 @@ class SyntaxerExceptionsTestCase(unittest.TestCase):
 
                 public static void main(String[] args) {
                    main(5, 6);
+                }
+            }
+        """)
+
+    def test_brackets(self):
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    int a = 5;
+                    {
+                    }
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    {
+                    }
+                    int a = 1;
                 }
             }
         """)
