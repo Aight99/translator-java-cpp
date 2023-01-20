@@ -211,8 +211,8 @@ class Variable:
         return f'Variable: {self.id.value}\nType: {self.type.value}\nInitialized: {self.is_initialized}'
 
 
-def get_type(type):
-    match type:
+def get_type(java_type):
+    match java_type:
         case 'boolean':
             return Type.BOOLEAN
         case 'char':
@@ -371,11 +371,13 @@ class FunctionAnalyzer:
                 case Label.NUMBER:
                     type_tree = label_tree[0]
                     if type_tree.label() == Label.NUMBER_INT:
+                        value = int(type_tree[0].value)
+                        if 0 <= value <= 65535:
+                            return Type.CHAR
                         return Type.INT
                     else:
                         return Type.DOUBLE
                 case Label.FUNC_CALL:
-                    self.__check_func_call(label_tree)
                     return self.__get_func_type(label_tree)
                 case Label.CHAR:
                     return Type.CHAR
@@ -461,7 +463,7 @@ class FunctionAnalyzer:
                     priority_functions[priority].append(func)
 
             if not priority_functions:
-                raise SemanticError(func_token.line, ErrorMessage.func_no_decl(func_id))
+                raise SemanticError(func_token.line, ErrorMessage.func_params_mismatch(func_id))
 
             max_priority = max(priority_functions)
 
@@ -509,4 +511,3 @@ class FunctionAnalyzer:
                 return self.__get_id_type(var_id)
             case Label.FUNC_CALL:
                 return self.__get_func_type(expr)
-

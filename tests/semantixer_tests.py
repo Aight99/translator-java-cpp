@@ -415,6 +415,15 @@ class SemantixerTestCase(unittest.TestCase):
             public class Main
             {
                 public static void main(String[] args) {
+                    char a = -5;
+                }
+            }
+        """, ErrorMessage.types_not_fit(Type.INT.name, Type.CHAR.name))
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
                     double b = 5;
                     float a = b;
                 }
@@ -484,6 +493,19 @@ class SemantixerTestCase(unittest.TestCase):
                 }
             }
         """, ErrorMessage.func_no_decl('plus'))
+
+    def test_func_params_mismatch(self):
+        self.check_wrong("""
+            public class Main
+            {
+                public static void plus(int a, boolean b) {
+                }
+                
+                public static void main(String[] args) {
+                    plus(5, 5);
+                }
+            }
+        """, ErrorMessage.func_params_mismatch('plus'))
 
     def test_func_ambiguous(self):
         self.check_wrong("""
@@ -602,6 +624,74 @@ class SemantixerTestCase(unittest.TestCase):
                 
                 public static void main() {
                     System.out.println(1 + 2 + 3);
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void printHello() {
+                    System.out.println(123);
+                }
+            
+                public static int plus(int a, int b) {
+                    return a + b;
+                }
+            
+                public static boolean isLegit() {
+                    boolean a = true;
+                    boolean b = true;
+                    boolean c = false;
+                    boolean d = true;
+                    boolean result = (!a && b) && !(c || d);
+                    return result;
+                }
+            
+                public static void main(String[] args) {
+                    printHello();
+                    if (true) {
+                        System.out.println(123);
+                        doRecursion(5);
+                    }
+                    while (true) {
+                        char c = 'a';
+                        for (float i = doMath(4, 3, 1, true); i < doMath(4, 3, 1, false); ++i) {
+                            float j = i;
+                            while (j < i + 6) {
+                                j++;
+                                System.out.println(c);
+                                c += 1;
+                            }
+                        }
+                    }
+                    char c = '$';
+                    System.out.println(c);
+            
+                    if (10 <= 11) {
+                        System.out.println(1);
+                    } else {
+                        System.out.println(0);
+                    }
+                }
+            
+                public static float doMath(int a, int b, int c, boolean d) {
+                    if (5 == 5) {
+                        return Math.min(a, b) / c;
+                    } else {
+                        c *= 2;
+                        c /= 2;
+                        c %= 10000000;
+                    }
+                    return c * Math.max(b, a);
+                }
+            
+                public static int doRecursion(int a) {
+                    if (a > 0) {
+                        printHello();
+                        doRecursion(a - 1);
+                    }
+                    return 0;
                 }
             }
         """)
