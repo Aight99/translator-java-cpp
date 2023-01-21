@@ -17,6 +17,7 @@ class Tag(Terminal):
     ID = 'id'
     NUMBER_INT = 'number_int'
     NUMBER_FLOAT = 'number_float'
+    NUMBER_DOUBLE = 'number_double'
     LBRACKET = 'lbracket'
     RBRACKET = 'rbracket'
     LBRACKET_SQUARE = 'lbracket_square'
@@ -60,7 +61,8 @@ LEXER_RULES = [
     LexerRule(Tag.INCREMENT, r'\+\+|\-\-'),
     LexerRule(Tag.MATH_OPERATOR, r'\*|/|\%|\+|\-'),
     LexerRule(Tag.COMPARE, r'==|\!=|\<=|\<|\>=|\>'),
-    LexerRule(Tag.NUMBER_FLOAT, r'[\-\+]?\d+\.\d+f?'),
+    LexerRule(Tag.NUMBER_FLOAT, r'([\-\+]?\d+\.\d+f)|([\-\+]?\d+f)'),
+    LexerRule(Tag.NUMBER_DOUBLE, r'[\-\+]?\d+\.\d+'),
     LexerRule(Tag.BOOLEAN_OPERATOR, r'\&\&|\|\|'),
     LexerRule(Tag.NUMBER_INT, r'[\-\+]?\d+'),
 
