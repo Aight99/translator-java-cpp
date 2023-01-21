@@ -453,6 +453,15 @@ class SemantixerTestCase(unittest.TestCase):
             public class Main
             {
                 public static void main(String[] args) {
+                    int a = 5f;
+                }
+            }
+        """, ErrorMessage.types_not_fit(Type.FLOAT.name, Type.INT.name))
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
                     float a = 5.0;
                 }
             }
@@ -659,7 +668,7 @@ class SemantixerTestCase(unittest.TestCase):
                     }
                     {
                         char c = 'a';
-                        for (float i = doMath(4, 3, 5, true); i < doMath(4, 3, 5, false); ++i) {
+                        for (float i = doMath(4, 3, 5f, true); i < doMath(4, 3, 5f, false); ++i) {
                             float j = i;
                             while (j < i + 6) {
                                 j++;
@@ -678,7 +687,7 @@ class SemantixerTestCase(unittest.TestCase):
                     }
                 }
             
-                public static float doMath(int a, int b, int c, boolean d) {
+                public static float doMath(int a, int b, float c, boolean d) {
                     if (d) {
                         return Math.min(a, b) / c;
                     }
