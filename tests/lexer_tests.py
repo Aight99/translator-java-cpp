@@ -1,12 +1,7 @@
 import logging
 import unittest
 from transpiler.constants import Tag, LEXER_RULES
-from transpiler.lexer.lexer import Lexer
-from transpiler.syntaxer.earley import Grammar, EarleyParse
-from transpiler.semantixer.semantixer import SemanticAnalyzer
-from transpiler.generator.generator import Generator
-
-logger = logging.getLogger(__name__)
+from transpiler.lexer.lexer import Lexer, LexerError
 
 
 class LexerTestCase(unittest.TestCase):
@@ -187,9 +182,46 @@ class LexerTestCase(unittest.TestCase):
         self.assertEqual(tokens[64].tag, Tag.RBRACKET_CURLY)
         self.assertEqual(tokens[65].tag, Tag.RBRACKET_CURLY)
 
+    def test_names(self):
+        code = "_a b123 C_123"
+        lexer = Lexer(Tag, LEXER_RULES)
+        lexer.buffer = code
+        tokens = list(lexer.tokens)
+        self.assertEqual(tokens[0].tag, Tag.ID)
+        self.assertEqual(tokens[1].tag, Tag.ID)
+        self.assertEqual(tokens[2].tag, Tag.ID)
+
+        with self.assertRaises(LexerError):
+            code = "123d"
+            lexer = Lexer(Tag, LEXER_RULES)
+            lexer.buffer = code
+            tokens = list(lexer.tokens)
+
+        with self.assertRaises(LexerError):
+            code = "я_айди"
+            lexer = Lexer(Tag, LEXER_RULES)
+            lexer.buffer = code
+            tokens = list(lexer.tokens)
+
+    def test_number_types(self):
+        code = "0.23f 5f 5 5.2"
+        lexer = Lexer(Tag, LEXER_RULES)
+        lexer.buffer = code
+        tokens = list(lexer.tokens)
+        self.assertEqual(tokens[0].tag, Tag.NUMBER_FLOAT)
+        self.assertEqual(tokens[1].tag, Tag.NUMBER_FLOAT)
+        self.assertEqual(tokens[2].tag, Tag.NUMBER_INT)
+        self.assertEqual(tokens[3].tag, Tag.NUMBER_DOUBLE)
+
+    def test_case_check(self):
+        code = "return ReTurn"
+        lexer = Lexer(Tag, LEXER_RULES)
+        lexer.buffer = code
+        tokens = list(lexer.tokens)
+        self.assertEqual(tokens[0].tag, Tag.RETURN)
+        self.assertEqual(tokens[1].tag, Tag.ID)
+
 
 def tests():
-    a = LexerTestCase()
-    a.test_if_for_statements()
-    a.test_math_operation()
+    unittest.main()
 
