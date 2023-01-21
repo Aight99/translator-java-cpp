@@ -39,6 +39,136 @@ class SyntaxerExceptionsTestCase(unittest.TestCase):
             }
         """)
 
+    def test_cycle(self):
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    int n = 5;
+                    int i = 0;
+                    while (i < n) {
+                        i += 1;
+                    }
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    int n = 5;
+                    int i = 0;
+                    do {
+                        i++;
+                    } while (i < n);
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    for (int i = 1; i <= 2; i++) {
+                        int j = 1;
+                        for (j = 1; j <= 3; j++) {
+                        }
+                    }
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    for (int i = 1; i <= 2;) {
+                    }
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    for (; i <= 2;) {
+                    }
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    for (;;) {
+                    }
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    for (;;i++) {
+                    }
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    for (int i = 5;;) {
+                    }
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    for (;;;) {
+                    }
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    while (;) {
+                    }
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    while () {
+                    }
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    do {
+                    } while ();
+                }
+            }
+        """)
+
     def test_statements(self):
         self.check_correct("""
             public class Main
@@ -53,6 +183,15 @@ class SyntaxerExceptionsTestCase(unittest.TestCase):
                         return 0;
                     }
                     return 1;
+                }
+            }
+        """)
+
+        self.check_correct("""
+            public class Main
+            {
+                public static void main(String[] args) {
+                    ;;;;
                 }
             }
         """)
@@ -219,6 +358,44 @@ class SyntaxerExceptionsTestCase(unittest.TestCase):
                     }
                     int a = 1;
                 }
+            }
+        """)
+
+    def test_structure(self):
+        self.check_wrong("""
+            public class Class
+            {
+                public static void main(String[] args) {
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void mainFunc(String[] args) {
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main() {
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static void main(int args) {
+                }
+            }
+        """)
+
+        self.check_wrong("""
+            public static void main(String[] args) {
             }
         """)
 
