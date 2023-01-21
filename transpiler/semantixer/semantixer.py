@@ -343,7 +343,7 @@ class FunctionAnalyzer:
                                 return Type.CHAR
                             return Type.INT
                         case Label.NUMBER_FLOAT:
-                            return Type.DOUBLE
+                            return Type.FLOAT
                         case Label.NUMBER_DOUBLE:
                             return Type.DOUBLE
                 case Label.FUNC_CALL:

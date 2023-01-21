@@ -1,6 +1,12 @@
 public class Main
 {
+    public static int plus(int a, double b) {
+        return 5;
+    }
+    public static int plus(double a, int b) {
+        return 6;
+    }
     public static void main(String[] args) {
-        char a = -5;
+        System.out.println(plus('a', 5.0));
     }
 }
