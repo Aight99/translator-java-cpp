@@ -197,6 +197,42 @@ class SemantixerTestCase(unittest.TestCase):
             }
         """, ErrorMessage.var_no_decl('a'))
 
+        self.check_wrong("""
+            public class Main
+            {
+                public static int plus(int a) {
+                    return b;
+                }
+            
+                public static void main(String[] args) {
+                }
+            }
+        """, ErrorMessage.var_no_decl('b'))
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static int plus(int a) {
+                    return a + b;
+                }
+
+                public static void main(String[] args) {
+                }
+            }
+        """, ErrorMessage.var_no_decl('b'))
+
+        self.check_wrong("""
+            public class Main
+            {
+                public static boolean plus(boolean a) {
+                    return a && b;
+                }
+
+                public static void main(String[] args) {
+                }
+            }
+        """, ErrorMessage.var_no_decl('b'))
+
     def test_boolean_op_assign(self):
         self.check_wrong("""
             public class Main
