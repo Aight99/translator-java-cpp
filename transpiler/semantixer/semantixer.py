@@ -353,6 +353,8 @@ class FunctionAnalyzer:
                 case Label.ID:
                     var_id = label_tree[0, 0]
                     id_type = self.__get_id_type(var_id)
+                    if id_type == Type.NONE:
+                        raise SemanticError(var_id.line, ErrorMessage.var_no_decl(var_id))
                     if not self.__get_var(var_id).is_initialized:
                         raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
                     if id_type == Type.NONE:
@@ -373,8 +375,9 @@ class FunctionAnalyzer:
         id_type = Type.NONE
         var = self.__get_var(var_id)
         if var is not None:
-            id_type = var.type
-        return id_type
+            return var.type
+        if id_type == Type.NONE:
+            raise SemanticError(var_id.line, ErrorMessage.var_no_decl(var_id))
 
     def __get_func_call_params_expressions(self, tree):
         expressions = []
@@ -446,6 +449,7 @@ class FunctionAnalyzer:
             case Label.LOGICAL_EXPR:
                 if needed_type != Type.BOOLEAN:
                     raise SemanticError(line, ErrorMessage.types_not_fit(Type.BOOLEAN.name, needed_type.name))
+                self.__check_bool_expr(expr)
             case Label.MATH_EXPR:
                 return_type = self.__get_math_expr_type(expr)
                 if needed_type < return_type:
@@ -464,6 +468,21 @@ class FunctionAnalyzer:
                 return_type = self.__get_func_type(expr)
                 if needed_type < return_type:
                     raise SemanticError(line, ErrorMessage.types_not_fit(return_type.name, needed_type.name))
+
+    def __check_bool_expr(self, tree):
+        for subtree in tree:
+            match subtree.label():
+                case Label.MATH_EXPR:
+                    self.__get_math_expr_type(subtree)
+                case Label.LOGICAL_EXPR:
+                    self.__check_bool_expr(subtree)
+                case Label.ID:
+                    var_id = subtree[0, 0]
+                    self.__get_id_type(var_id)
+                    if not self.__get_var(var_id).is_initialized:
+                        raise SemanticError(var_id.line, ErrorMessage.var_no_init(var_id))
+                case Label.FUNC_CALL:
+                    self.__get_func_type(subtree)
 
     def __get_expr_type(self, expr):
         match expr.label():
